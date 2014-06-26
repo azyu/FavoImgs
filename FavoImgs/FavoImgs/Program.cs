@@ -287,7 +287,31 @@ namespace FavoImgs
                         }
                     }
 
-                    if( twt.Entities.Media != null )
+                    if (twt.ExtendedEntities != null && twt.ExtendedEntities.Media != null)
+                    {
+                        foreach (var media in twt.ExtendedEntities.Media)
+                        {
+                            WebClient wc = new WebClient();
+                            Uri uri = media.MediaUrl;
+
+                            if (!IsImageFile(uri.ToString()))
+                                continue;
+
+                            Console.WriteLine(" - Downloading... {0} (Twitter image)", uri.ToString());
+
+                            try
+                            {
+                                string newuri = ModifyImageUri(uri.ToString());
+                                wc.DownloadFile(newuri, Path.Combine(dir, uri.Segments.Last()));
+                            }
+                            catch (Exception ex)
+                            {
+                                isAllDownloaded = false;
+                                Console.WriteLine(ex.Message);
+                            }
+                        }
+                    }
+                    else if( twt.Entities.Media != null )
                     {
                         foreach (var media in twt.Entities.Media)
                         {
