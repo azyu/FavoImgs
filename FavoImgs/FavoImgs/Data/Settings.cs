@@ -34,8 +34,8 @@ namespace FavoImgs.Data
         {
             return new Settings
             {
-                ConsumerKey = "A22Di4+GfBVUKToPK1IHWXIAFTXrBVURULDxA8B5AL8=",
-                ConsumerSecret = "r9i+A4CfFJPu8dqI9mw68wWMcUhJm1kK4uXxryLKHBPOykPmbOYlpkD/aNyp/Oej3X+vl+UHKdESoBvfJ1oELw==",
+                ConsumerKey = "Q2ClVMX9YvWAiWRfJbIbZr0DO",
+                ConsumerSecret = "cHXGkKc5gmWaYFvA6Zvr56GQLzrus2pOYblupP6rI2famIlhgD",
                 DownloadPath = String.Empty,
                 DirectoryNamingConvention = DirectoryNamingConvention.None,
             };

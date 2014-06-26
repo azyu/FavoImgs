@@ -60,7 +60,7 @@ namespace FavoImgs
             var version = Assembly.GetEntryAssembly().GetName().Version;
 
             Console.WriteLine("FavoImgs {0}, Copyright (c) 2014, Azyu (@_uyza_)", version);
-            // Console.WriteLine("http://github.com/azyu/FavoImgs");
+            Console.WriteLine("http://github.com/azyu/FavoImgs");
             Console.WriteLine("============================================================");
             Console.WriteLine();
         }
@@ -189,12 +189,6 @@ namespace FavoImgs
 
             try
             {
-                if (!String.IsNullOrEmpty(consumerKey))
-                    consumerKey = RijndaelEncryption.DecryptRijndael(consumerKey);
-
-                if (!String.IsNullOrEmpty(consumerSecret))
-                    consumerSecret = RijndaelEncryption.DecryptRijndael(consumerSecret);
-
                 if (!String.IsNullOrEmpty(accessToken))
                     accessToken = RijndaelEncryption.DecryptRijndael(accessToken);
 
