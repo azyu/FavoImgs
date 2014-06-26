@@ -268,6 +268,7 @@ namespace FavoImgs
                     if (!Directory.Exists(dir))
                         Directory.CreateDirectory(dir);
 
+                    bool isAllDownloaded = true;
                     if( twt.Entities.Urls != null )
                     {
                         foreach (var url in twt.Entities.Urls)
@@ -286,6 +287,7 @@ namespace FavoImgs
                             }
                             catch (Exception ex)
                             {
+                                isAllDownloaded = false;
                                 Console.WriteLine(ex.Message);
                             }
                         }
@@ -310,12 +312,15 @@ namespace FavoImgs
                             }
                             catch (Exception ex)
                             {
+                                isAllDownloaded = false;
                                 Console.WriteLine(ex.Message);
                             }
                         }
                     }
 
-                    TweetCache.SetImageTaken(twt.Id);
+                    if( isAllDownloaded )
+                        TweetCache.SetImageTaken(twt.Id);
+    
                     Console.WriteLine();
                 }
 
