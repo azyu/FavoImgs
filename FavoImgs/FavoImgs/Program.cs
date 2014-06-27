@@ -273,11 +273,48 @@ namespace FavoImgs
                         {
                             Uri uri = url.ExpandedUrl;
 
-                            if (!IsImageFile(uri.ToString()))
-                                continue;
+                            if (IsImageFile(uri.ToString()))
+                            {
+                                pathnames.Add(Path.Combine(dir, uri.Segments.Last()));
+                                uris.Add(uri.ToString());
+                            }
+                            else
+                            {
+                                if (!uri.ToString().Contains("twitter.com"))
+                                    continue;
 
-                            pathnames.Add(Path.Combine(dir, uri.Segments.Last()));
-                            uris.Add(uri.ToString());
+                                string htmlCode;
+                                try
+                                {
+                                    var htmlwc = new WebClient();
+                                    htmlCode = htmlwc.DownloadString(uri);
+                                }
+                                catch (WebException)
+                                {
+                                    continue;
+                                }
+
+                                var doc = new HtmlAgilityPack.HtmlDocument();
+                                doc.LoadHtml(htmlCode);
+
+                                var nodes = doc.DocumentNode.SelectNodes("//source");
+                                if (nodes == null) continue;
+
+                                foreach (var link in nodes)
+                                {
+                                    if (!link.Attributes.Any(x => x.Name == "type" && x.Value == "video/mp4"))
+                                        continue;
+
+                                    var attributes = link.Attributes.Where(x => x.Name == "video-src").ToList();
+                                    foreach (var att in attributes)
+                                    {
+                                        var atturi = att.Value;
+                                        var pathname = Path.Combine(dir, atturi.Split('/').Last());
+                                        pathnames.Add(pathname);
+                                        uris.Add(atturi);
+                                    }
+                                }
+                            }
                         }
                     }
 
