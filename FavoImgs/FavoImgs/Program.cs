@@ -129,10 +129,8 @@ namespace FavoImgs
             string retval = String.Empty;
 
             // Twitter image
-            if (uri.IndexOf("twimg.com") > 0)
-            {
-                retval =  uri + ":orig";
-            }
+            if (uri.Contains("twimg.com"))
+                retval =  uri + ":large";
 
             return retval;
         }
