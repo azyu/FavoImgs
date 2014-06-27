@@ -217,18 +217,31 @@ namespace FavoImgs
                 Directory.CreateDirectory(downloadPath);
 
             long maxId = 0;
+            const int count = 200;
+            var bRemainTweet = true;
 
-            for (int i = 0; i < 5; ++i)
+            while (bRemainTweet)            
             {
                 Dictionary<string, object> arguments = new Dictionary<string, object>();
-                arguments.Add("count", 200);
-                if (maxId != 0)
+                arguments.Add("count", count);
+
+                if (maxId != 0) 
                     arguments.Add("max_id", maxId - 1);
 
-                CoreTweet.Core.ListedResponse<Status> favorites = null;
+                CoreTweet.Core.ListedResponse<Status> favorites;
                 try
                 {
                     favorites = tokens.Favorites.List(arguments);
+                }
+                catch (TwitterException ex)
+                {
+                    // Too many request: Twitter limit exceeded
+                    if (ex.Status == (HttpStatusCode)429)
+                    {
+                        Console.WriteLine("Twitter API limited Retry after 60 sec");
+                        Thread.Sleep(600000); // Sleep 60 
+                    }
+                    continue; 
                 }
                 catch (Exception ex)
                 {
@@ -357,6 +370,9 @@ namespace FavoImgs
                     favorites.RateLimit.Remaining,
                     favorites.RateLimit.Limit,
                     favorites.RateLimit.Reset.LocalDateTime);
+
+                if (favorites.Count < count)
+                    bRemainTweet = false;
 
             }
 
