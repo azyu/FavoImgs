@@ -264,27 +264,20 @@ namespace FavoImgs
 
                     bool isAllDownloaded = true;
 					
+                    var pathnames = new List<string>();
+                    var uris = new List<string>();
+
                     if( twt.Entities.Urls != null )
                     {
                         foreach (var url in twt.Entities.Urls)
                         {
-                            WebClient wc = new WebClient();
                             Uri uri = url.ExpandedUrl;
 
                             if (!IsImageFile(uri.ToString()))
                                 continue;
 
-                            Console.WriteLine(" - Downloading... {0} (Url)", uri.ToString());
-
-                            try
-                            {
-                                wc.DownloadFile(uri, Path.Combine(dir, uri.Segments.Last()));
-                            }
-                            catch (Exception ex)
-                            {
-                                isAllDownloaded = false;
-                                Console.WriteLine(ex.Message);
-                            }
+                            pathnames.Add(Path.Combine(dir, uri.Segments.Last()));
+                            uris.Add(uri.ToString());
                         }
                     }
 
@@ -292,24 +285,28 @@ namespace FavoImgs
                     {
                         foreach (var media in twt.ExtendedEntities.Media)
                         {
-                            WebClient wc = new WebClient();
                             Uri uri = media.MediaUrl;
 
-                            if (!IsImageFile(uri.ToString()))
+                            if (!IsImageFile(uri.ToString())) 
                                 continue;
 
-                            Console.WriteLine(" - Downloading... {0} (Twitter image)", uri.ToString());
+                            pathnames.Add(Path.Combine(dir, uri.Segments.Last()));
+                            uris.Add(ModifyImageUri(uri.ToString()));
+                        }
+                    }
 
-                            try
-                            {
-                                string newuri = ModifyImageUri(uri.ToString());
-                                wc.DownloadFile(newuri, Path.Combine(dir, uri.Segments.Last()));
-                            }
-                            catch (Exception ex)
-                            {
-                                isAllDownloaded = false;
-                                Console.WriteLine(ex.Message);
-                            }
+                    for (var c = 0; c < uris.Count; c++)
+                    {
+                        try
+                        {
+                            WebClient wc = new WebClient();
+                            Console.WriteLine(" - Downloading... {0} (Twitter image)", uris[c]);
+                            wc.DownloadFile(uris[c], pathnames[c]);
+                        }
+                        catch (Exception ex)
+                        {
+                            isAllDownloaded = false;
+                            Console.WriteLine(ex.Message);
                         }
                     }
 
@@ -322,7 +319,7 @@ namespace FavoImgs
                 Console.WriteLine("Limit: {0}/{1}, Reset: {2}",
                     favorites.RateLimit.Remaining,
                     favorites.RateLimit.Limit,
-                    favorites.RateLimit.Reset.LocalDateTime.ToString());
+                    favorites.RateLimit.Reset.LocalDateTime);
 
             }
 
