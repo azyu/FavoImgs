@@ -263,6 +263,7 @@ namespace FavoImgs
                         Directory.CreateDirectory(dir);
 
                     bool isAllDownloaded = true;
+					
                     if( twt.Entities.Urls != null )
                     {
                         foreach (var url in twt.Entities.Urls)
@@ -290,30 +291,6 @@ namespace FavoImgs
                     if (twt.ExtendedEntities != null && twt.ExtendedEntities.Media != null)
                     {
                         foreach (var media in twt.ExtendedEntities.Media)
-                        {
-                            WebClient wc = new WebClient();
-                            Uri uri = media.MediaUrl;
-
-                            if (!IsImageFile(uri.ToString()))
-                                continue;
-
-                            Console.WriteLine(" - Downloading... {0} (Twitter image)", uri.ToString());
-
-                            try
-                            {
-                                string newuri = ModifyImageUri(uri.ToString());
-                                wc.DownloadFile(newuri, Path.Combine(dir, uri.Segments.Last()));
-                            }
-                            catch (Exception ex)
-                            {
-                                isAllDownloaded = false;
-                                Console.WriteLine(ex.Message);
-                            }
-                        }
-                    }
-                    else if( twt.Entities.Media != null )
-                    {
-                        foreach (var media in twt.Entities.Media)
                         {
                             WebClient wc = new WebClient();
                             Uri uri = media.MediaUrl;
