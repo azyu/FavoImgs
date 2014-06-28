@@ -18,6 +18,10 @@ namespace FavoImgs
             HelpText = "Reset default download path.")]
         public bool ResetDownloadPath { get; set; }
 
+        [Option('a', "all", Required = false,
+            HelpText = "Get them all!")]
+        public bool GetThemAll { get; set; }
+
         [ParserState]
         public IParserState ParserState { get; set; }
 
