@@ -16,6 +16,13 @@ namespace FavoImgs
 {
     class Program
     {
+        private static void WriteException(Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(" - {0}", ex.Message);
+            Console.ResetColor();
+        }
+
         private static void Initialize()
         {
             try
@@ -44,7 +51,6 @@ namespace FavoImgs
             Console.WriteLine("FavoImgs {0}, Copyright (c) 2014, Azyu (@_uyza_)", version);
             Console.WriteLine("http://github.com/azyu/FavoImgs");
             Console.WriteLine("============================================================");
-            Console.WriteLine();
         }
 
         private static string ShowFolderBrowserDialog()
@@ -162,6 +168,8 @@ namespace FavoImgs
                 foreach (var url in twt.Entities.Urls)
                 {
                     Uri uri = url.ExpandedUrl;
+                    
+                    IMediaProvider mediaProvider = null;
 
                     if (IsImageFile(uri.ToString()))
                     {
@@ -171,93 +179,31 @@ namespace FavoImgs
                     {
                         if (uri.ToString().Contains("twitter.com"))
                         {
-                            string htmlCode = String.Empty;
-                            try
-                            {
-                                var htmlwc = new WebClient();
-                                htmlCode = htmlwc.DownloadString(uri);
-                            }
-                            catch (WebException)
-                            {
-                                continue;
-                            }
-
-                            var doc = new HtmlAgilityPack.HtmlDocument();
-                            doc.LoadHtml(htmlCode);
-
-                            var nodes = doc.DocumentNode.SelectNodes("//source");
-                            if (nodes == null) continue;
-
-                            foreach (var link in nodes)
-                            {
-                                if (!link.Attributes.Any(x => x.Name == "type" && x.Value == "video/mp4"))
-                                    continue;
-
-                                var attributes = link.Attributes.Where(x => x.Name == "video-src").ToList();
-                                foreach (var att in attributes)
-                                {
-                                    var attUri = new Uri(att.Value);
-                                    downloadItems.Add(new DownloadItem(twt.Id, attUri, attUri.Segments.Last()));
-                                }
-                            }
+                            mediaProvider = new TwitterMp4();
                         }
                         else if (uri.ToString().Contains("twitpic.com"))
                         {
-                            string htmlCode = String.Empty;
-                            try
-                            {
-                                var htmlwc = new WebClient();
-                                htmlCode = htmlwc.DownloadString(uri + "/full");
-                            }
-                            catch (WebException)
-                            {
-                                continue;
-                            }
-
-                            var doc = new HtmlAgilityPack.HtmlDocument();
-                            doc.LoadHtml(htmlCode);
-
-                            var nodes = doc.DocumentNode.SelectNodes("//*[@id='media-full']/img");
-                            if (nodes == null) continue;
-
-                            foreach (var link in nodes)
-                            {
-                                var attributes = link.Attributes.Where(x => x.Name == "src").ToList();
-                                foreach (var att in attributes)
-                                {
-                                    var attUri = new Uri(att.Value);
-                                    downloadItems.Add(new DownloadItem(twt.Id, attUri, attUri.Segments.Last()));
-                                }
-                            }
+                            mediaProvider = new TwitPic();
                         }
                         else if (uri.ToString().Contains("yfrog.com"))
                         {
-                            Uri newUrl = new Uri(String.Format("http://twitter.yfrog.com/z/{0}", uri.Segments.Last()));
-                            string htmlCode = String.Empty;
+                            mediaProvider = new Yfrog();
+                        }
+
+                        if (mediaProvider != null)
+                        {
                             try
                             {
-                                var htmlwc = new WebClient();
-                                htmlCode = htmlwc.DownloadString(newUrl);
-                            }
-                            catch (WebException)
-                            {
-                                continue;
-                            }
+                                List<Uri> mediaUris = mediaProvider.GetUri(uri);
 
-                            var doc = new HtmlAgilityPack.HtmlDocument();
-                            doc.LoadHtml(htmlCode);
-
-                            var nodes = doc.DocumentNode.SelectNodes("//*[@id='the-image']/a/img");
-                            if (nodes == null) continue;
-
-                            foreach (var link in nodes)
-                            {
-                                var attributes = link.Attributes.Where(x => x.Name == "src").ToList();
-                                foreach (var att in attributes)
+                                foreach (var eachUri in mediaUris)
                                 {
-                                    var attUri = new Uri(att.Value);
-                                    downloadItems.Add(new DownloadItem(twt.Id, attUri, attUri.Segments.Last()));
+                                    downloadItems.Add(new DownloadItem(twt.Id, eachUri, eachUri.Segments.Last()));
                                 }
+                            }
+                            catch(Exception ex)
+                            {
+                                WriteException(ex);
                             }
                         }
                     }
@@ -288,17 +234,15 @@ namespace FavoImgs
             var options = new Options();
             if (CommandLine.Parser.Default.ParseArguments(args, options))
             {
-                Console.WriteLine("[ Options ]");
-
                 if (options.Continue)
                 {
-                    Console.WriteLine(" - Continue download from the oldest favorite tweet");
+                    Console.WriteLine(" [Option] Continue download from the oldest favorite tweet");
                 }
 
                 if (options.ResetDownloadPath)
                 {
                     Settings.Current.DownloadPath = String.Empty;
-                    Console.WriteLine(" - Reset default download path");
+                    Console.WriteLine(" [Option] Reset default download path");
                 }
 
                 Console.WriteLine();
@@ -333,7 +277,7 @@ namespace FavoImgs
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                WriteException(ex);
                 Console.ReadLine();
                 return 1;
             }
@@ -351,7 +295,7 @@ namespace FavoImgs
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    WriteException(ex);
                 }
             }
 
@@ -370,7 +314,7 @@ namespace FavoImgs
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    WriteException(ex);
                     Console.ReadLine();
                     return 1;
                 }
@@ -428,7 +372,7 @@ namespace FavoImgs
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine(ex.Message);
+                            WriteException(ex);
                         }
                     }
 
