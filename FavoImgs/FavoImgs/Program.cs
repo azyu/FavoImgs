@@ -8,8 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace FavoImgs
@@ -253,6 +253,11 @@ namespace FavoImgs
                     Console.WriteLine(" [Option] Reset default download path");
                 }
 
+                if (options.GetThemAll)
+                {
+                    Console.WriteLine(" [Option] Get them all!");
+                }
+
                 Console.WriteLine();
             }
 
@@ -307,7 +312,13 @@ namespace FavoImgs
                 }
             }
 
-            for (int i = 0; i < 10; ++i)
+            int left = 10;
+            if (options.GetThemAll)
+                left = Int32.MaxValue;
+
+            bool bRunning = true;
+            
+            while(bRunning)
             {
                 Dictionary<string, object> arguments = new Dictionary<string, object>();
                 arguments.Add("count", 200);
@@ -319,6 +330,26 @@ namespace FavoImgs
                 try
                 {
                     favorites = tokens.Favorites.List(arguments);
+                }
+                catch(TwitterException ex)
+                {
+                    // rate limit exceeded
+                    if(ex.Status == (HttpStatusCode)429)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine(" [] Rate limit exceeded. Try again after 60 seconds.");
+                        Console.ResetColor();
+                    }
+
+                    if (favorites != null)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine(" [] Reset: {0}\n", favorites.RateLimit.Reset.LocalDateTime);
+                        Console.ResetColor();
+                    }
+
+                    Thread.Sleep(60 * 1000);
+                    continue;
                 }
                 catch (Exception ex)
                 {
@@ -393,6 +424,11 @@ namespace FavoImgs
                     favorites.RateLimit.Limit,
                     favorites.RateLimit.Reset.LocalDateTime);
                 Console.ResetColor();
+
+                --left;
+
+                if (left == 0 || favorites.Count == 0)
+                    bRunning = false;
             }
 
             Console.WriteLine("Press ENTER to exit...");
