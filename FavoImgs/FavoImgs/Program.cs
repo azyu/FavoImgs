@@ -8,11 +8,23 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Windows.Forms;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 
 namespace FavoImgs
 {
+    public class DownloadItem
+    {
+        public DownloadItem(Uri uri, String fileName)
+        {
+            Uri = uri;
+            FileName = fileName;
+        }
+
+        public Uri Uri { get; set; }
+        public String FileName { get; set; }
+    }
+
     class Program
     {
         private static readonly string dataPath = 
@@ -131,7 +143,7 @@ namespace FavoImgs
             // Twitter image
             if (uri.IndexOf("twimg.com") > 0)
             {
-                retval =  uri + ":orig";
+                retval = uri + ":orig";
             }
 
             return retval;
@@ -171,6 +183,129 @@ namespace FavoImgs
             }
 
             return tokens;
+        }
+
+        private static void GetMediaUris(CoreTweet.Status twt, ref List<DownloadItem> downloadItems)
+        {
+            if (twt.Entities.Urls != null)
+            {
+                foreach (var url in twt.Entities.Urls)
+                {
+                    Uri uri = url.ExpandedUrl;
+
+                    if (IsImageFile(uri.ToString()))
+                    {
+                        downloadItems.Add(new DownloadItem(uri, uri.Segments.Last()));
+                    }
+                    else
+                    {
+                        if (uri.ToString().Contains("twitter.com"))
+                        {
+                            string htmlCode = String.Empty;
+                            try
+                            {
+                                var htmlwc = new WebClient();
+                                htmlCode = htmlwc.DownloadString(uri);
+                            }
+                            catch (WebException)
+                            {
+                                continue;
+                            }
+
+                            var doc = new HtmlAgilityPack.HtmlDocument();
+                            doc.LoadHtml(htmlCode);
+
+                            var nodes = doc.DocumentNode.SelectNodes("//source");
+                            if (nodes == null) continue;
+
+                            foreach (var link in nodes)
+                            {
+                                if (!link.Attributes.Any(x => x.Name == "type" && x.Value == "video/mp4"))
+                                    continue;
+
+                                var attributes = link.Attributes.Where(x => x.Name == "video-src").ToList();
+                                foreach (var att in attributes)
+                                {
+                                    var attUri = new Uri(att.Value);
+                                    downloadItems.Add(new DownloadItem(attUri, attUri.Segments.Last()));
+                                }
+                            }
+                        }
+                        else if(uri.ToString().Contains("twitpic.com"))
+                        {
+                            string htmlCode = String.Empty;
+                            try
+                            {
+                                var htmlwc = new WebClient();
+                                htmlCode = htmlwc.DownloadString(uri + "/full");
+                            }
+                            catch (WebException)
+                            {
+                                continue;
+                            }
+
+                            var doc = new HtmlAgilityPack.HtmlDocument();
+                            doc.LoadHtml(htmlCode);
+
+                            var nodes = doc.DocumentNode.SelectNodes("//*[@id='media-full']/img");
+                            if (nodes == null) continue;
+
+                            foreach (var link in nodes)
+                            {
+                                var attributes = link.Attributes.Where(x => x.Name == "src").ToList();
+                                foreach (var att in attributes)
+                                {
+                                    var attUri = new Uri(att.Value);
+                                    downloadItems.Add(new DownloadItem(attUri, attUri.Segments.Last()));
+                                }
+                            }
+                        }
+                        else if(uri.ToString().Contains("yfrog.com"))
+                        {
+                            Uri newUrl = new Uri(String.Format("http://twitter.yfrog.com/z/{0}", uri.Segments.Last()));
+                            string htmlCode = String.Empty;
+                            try
+                            {
+                                var htmlwc = new WebClient();
+                                htmlCode = htmlwc.DownloadString(newUrl);
+                            }
+                            catch (WebException)
+                            {
+                                continue;
+                            }
+
+                            var doc = new HtmlAgilityPack.HtmlDocument();
+                            doc.LoadHtml(htmlCode);
+
+                            var nodes = doc.DocumentNode.SelectNodes("//*[@id='the-image']/a/img");
+                            if (nodes == null) continue;
+
+                            foreach (var link in nodes)
+                            {
+                                var attributes = link.Attributes.Where(x => x.Name == "src").ToList();
+                                foreach (var att in attributes)
+                                {
+                                    var attUri = new Uri(att.Value);
+                                    downloadItems.Add(new DownloadItem(attUri, attUri.Segments.Last()));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (twt.ExtendedEntities != null && twt.ExtendedEntities.Media != null)
+            {
+                foreach (var media in twt.ExtendedEntities.Media)
+                {
+                    Uri uri = media.MediaUrl;
+
+                    if (!IsImageFile(uri.ToString()))
+                        continue;
+
+                    downloadItems.Add(new DownloadItem(uri, uri.Segments.Last()));
+                }
+            }
         }
 
         [STAThread]
@@ -218,7 +353,7 @@ namespace FavoImgs
 
             long maxId = 0;
 
-            for (int i = 0; i < 5; ++i)
+            for (int i = 0; i < 10; ++i)
             {
                 Dictionary<string, object> arguments = new Dictionary<string, object>();
                 arguments.Add("count", 200);
@@ -246,6 +381,7 @@ namespace FavoImgs
                     string twtxt = ShowTweet(twt);
                     Console.WriteLine(twtxt);
 
+                    /*
                     if (!TweetCache.IsExist(twt.Id))
                         TweetCache.Add(twt);
                     else if (TweetCache.IsImageTaken(twt.Id))
@@ -253,6 +389,7 @@ namespace FavoImgs
                         Console.WriteLine(" - already taken image. pass...\n");
                         continue;
                     }
+                    */
 
                     string dir = GetSubDirectoryName(
                         Settings.Current.DownloadPath,
@@ -263,82 +400,26 @@ namespace FavoImgs
                         Directory.CreateDirectory(dir);
 
                     bool isAllDownloaded = true;
-					
-                    var pathnames = new List<string>();
-                    var uris = new List<string>();
 
-                    if( twt.Entities.Urls != null )
-                    {
-                        foreach (var url in twt.Entities.Urls)
-                        {
-                            Uri uri = url.ExpandedUrl;
+                    var downloadItems = new List<DownloadItem>();
 
-                            if (IsImageFile(uri.ToString()))
-                            {
-                                pathnames.Add(Path.Combine(dir, uri.Segments.Last()));
-                                uris.Add(uri.ToString());
-                            }
-                            else
-                            {
-                                if (!uri.ToString().Contains("twitter.com"))
-                                    continue;
+                    GetMediaUris(twt, ref downloadItems);
 
-                                string htmlCode;
-                                try
-                                {
-                                    var htmlwc = new WebClient();
-                                    htmlCode = htmlwc.DownloadString(uri);
-                                }
-                                catch (WebException)
-                                {
-                                    continue;
-                                }
+                    var tempPath = Path.GetTempPath();
 
-                                var doc = new HtmlAgilityPack.HtmlDocument();
-                                doc.LoadHtml(htmlCode);
-
-                                var nodes = doc.DocumentNode.SelectNodes("//source");
-                                if (nodes == null) continue;
-
-                                foreach (var link in nodes)
-                                {
-                                    if (!link.Attributes.Any(x => x.Name == "type" && x.Value == "video/mp4"))
-                                        continue;
-
-                                    var attributes = link.Attributes.Where(x => x.Name == "video-src").ToList();
-                                    foreach (var att in attributes)
-                                    {
-                                        var atturi = att.Value;
-                                        var pathname = Path.Combine(dir, atturi.Split('/').Last());
-                                        pathnames.Add(pathname);
-                                        uris.Add(atturi);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if (twt.ExtendedEntities != null && twt.ExtendedEntities.Media != null)
-                    {
-                        foreach (var media in twt.ExtendedEntities.Media)
-                        {
-                            Uri uri = media.MediaUrl;
-
-                            if (!IsImageFile(uri.ToString())) 
-                                continue;
-
-                            pathnames.Add(Path.Combine(dir, uri.Segments.Last()));
-                            uris.Add(ModifyImageUri(uri.ToString()));
-                        }
-                    }
-
-                    for (var c = 0; c < uris.Count; c++)
+                    for (int j = 0; j < downloadItems.Count; ++j)
                     {
                         try
                         {
                             WebClient wc = new WebClient();
-                            Console.WriteLine(" - Downloading... {0} (Twitter image)", uris[c]);
-                            wc.DownloadFile(uris[c], pathnames[c]);
+                            string tempFilePath = Path.Combine(tempPath, downloadItems[j].FileName);
+                            string realFilePath = Path.Combine(downloadPath, downloadItems[j].FileName);
+
+                            Console.WriteLine(" - Downloading... {0}", downloadItems[j].Uri);
+                            wc.DownloadFile(downloadItems[j].Uri, tempFilePath);
+
+                            // 탐색기 섬네일 캐시 문제로 인하여 임시 폴더에서 파일을 받은 다음, 해당 폴더로 이동
+                            File.Move(tempFilePath, realFilePath);
                         }
                         catch (Exception ex)
                         {
@@ -347,8 +428,8 @@ namespace FavoImgs
                         }
                     }
 
-                    if( isAllDownloaded )
-                        TweetCache.SetImageTaken(twt.Id);
+                    // if( isAllDownloaded )
+                        // TweetCache.SetImageTaken(twt.Id);
     
                     Console.WriteLine();
                 }

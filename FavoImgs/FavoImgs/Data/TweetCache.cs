@@ -32,21 +32,11 @@ namespace FavoImgs.Data
                 string query = String.Empty;
 
                 query =
-                    "CREATE TABLE [Favorites] (" +
-                    "[Id] bigint PRIMARY KEY NOT NULL," +
-                    "[CreatedAt] datetime NOT NULL," +
-                    "[UserId] bigint NOT NULL," +
-                    "[Text] nvarchar(140) NOT NULL," +
-                    "[State] int NOT NULL);";
-
-                cmd.CommandText = query;
-                cmd.ExecuteNonQuery();
-
-                query =
                     "CREATE TABLE [MediaUris] (" +
                     "[Id] bigint NOT NULL," +
-                    "[Uri] nvarchar(256) NOT NULL);" +
-                    "CREATE INDEX [IX_Id] ON [MediaUris] ([Id]);";
+                    "[Uri] nvarchar(256) NOT NULL," +
+                    "[State] int NOT NULL," +
+                    "PRIMARY KEY ([Id], [Uri]);";
 
                 cmd.CommandText = query;
                 cmd.ExecuteNonQuery();
@@ -71,7 +61,7 @@ namespace FavoImgs.Data
 
                 string query = String.Empty;
 
-                query = @"SELECT count(*) FROM [Favorites] WHERE [Id] = @Id";
+                query = @"SELECT count(*) FROM [MediaUris] WHERE [Id] = @Id";
                 cmd.CommandText = query;
                 cmd.Parameters.AddWithValue("@Id", Id);
 
@@ -96,7 +86,7 @@ namespace FavoImgs.Data
 
                 string query = String.Empty;
 
-                query = @"SELECT Id FROM [Favorites] order by Id DESC limit 1";
+                query = @"SELECT Id FROM [MediaUris] order by Id DESC limit 1";
                 cmd.CommandText = query;
 
                 Int64 Id = Convert.ToInt64(cmd.ExecuteScalar());
@@ -108,7 +98,7 @@ namespace FavoImgs.Data
             }
         }
 
-        public static bool ResetImageTaken()
+        public static bool ResetImageTakenState()
         {
             try
             {
@@ -120,7 +110,7 @@ namespace FavoImgs.Data
 
                 string query = String.Empty;
 
-                query = @"UPDATE [Favorites] SET [State] = 0";
+                query = @"UPDATE [MediaUris] SET [State] = 0";
                 cmd.CommandText = query;
                 int rowcount = cmd.ExecuteNonQuery();
 
@@ -132,7 +122,7 @@ namespace FavoImgs.Data
             }
         }
 
-        public static bool SetImageTaken(long Id)
+        public static bool SetImageTakenState(long Id, string uri)
         {
             try
             {
@@ -144,9 +134,10 @@ namespace FavoImgs.Data
 
                 string query = String.Empty;
 
-                query = @"UPDATE [Favorites] SET [State] = 1 WHERE [Id] = @Id";
+                query = @"UPDATE [MediaUris] SET [State] = 1 WHERE [Id] = @Id and [Uri] = @Uri";
                 cmd.CommandText = query;
                 cmd.Parameters.AddWithValue("@Id", Id);
+                cmd.Parameters.AddWithValue("@Uri", uri);
                 int rowcount = cmd.ExecuteNonQuery();
 
                 return (rowcount != 0);
@@ -157,7 +148,7 @@ namespace FavoImgs.Data
             }
         }
 
-        public static bool IsImageTaken(long Id)
+        public static bool IsImageTaken(long Id, string uri)
         {
             try
             {
@@ -169,9 +160,10 @@ namespace FavoImgs.Data
 
                 string query = String.Empty;
 
-                query = @"SELECT [State] FROM [Favorites] WHERE [Id] = @Id";
+                query = @"SELECT [State] FROM [MediaUris] WHERE [Id] = @Id and [Uri] = @Uri";
                 cmd.CommandText = query;
                 cmd.Parameters.AddWithValue("@Id", Id);
+                cmd.Parameters.AddWithValue("@Uri", uri);
 
                 int state = Convert.ToInt32(cmd.ExecuteScalar());
                 return (state != 0);
