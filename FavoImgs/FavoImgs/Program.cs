@@ -14,20 +14,6 @@ using System.Windows.Forms;
 
 namespace FavoImgs
 {
-    public class DownloadItem
-    {
-        public DownloadItem(long tweetId, Uri uri, String fileName)
-        {
-            TweetId = tweetId;
-            Uri = uri;
-            FileName = fileName;
-        }
-
-        public long TweetId { get; set; }
-        public Uri Uri { get; set; }
-        public String FileName { get; set; }
-    }
-
     class Program
     {
         private static void Initialize()
@@ -87,7 +73,7 @@ namespace FavoImgs
         private static string GetSubDirectoryName(string basePath, DirectoryNamingConvention convention, DateTimeOffset createdAt, string screenName)
         {
             string retpath = String.Empty;
-            switch(convention)
+            switch (convention)
             {
                 default:
                 case DirectoryNamingConvention.None:
@@ -97,7 +83,7 @@ namespace FavoImgs
                 case DirectoryNamingConvention.Date:
                     retpath = Path.Combine(basePath, createdAt.LocalDateTime.ToString("yyyyMMdd"));
                     break;
-                    
+
                 case DirectoryNamingConvention.ScreenName:
                     retpath = Path.Combine(basePath, screenName);
                     break;
@@ -119,7 +105,7 @@ namespace FavoImgs
             string pattern = @"^.*\.(jpg|JPG|gif|GIF|png|PNG)$";
             return Regex.IsMatch(uri, pattern);
         }
-        
+
         private static string ModifyImageUri(string uri)
         {
             string retval = String.Empty;
@@ -152,7 +138,7 @@ namespace FavoImgs
                 {
                     tokens = session.GetTokens(pin);
                 }
-                catch 
+                catch
                 {
                     throw;
                 }
@@ -215,7 +201,7 @@ namespace FavoImgs
                                 }
                             }
                         }
-                        else if(uri.ToString().Contains("twitpic.com"))
+                        else if (uri.ToString().Contains("twitpic.com"))
                         {
                             string htmlCode = String.Empty;
                             try
@@ -244,7 +230,7 @@ namespace FavoImgs
                                 }
                             }
                         }
-                        else if(uri.ToString().Contains("yfrog.com"))
+                        else if (uri.ToString().Contains("yfrog.com"))
                         {
                             Uri newUrl = new Uri(String.Format("http://twitter.yfrog.com/z/{0}", uri.Segments.Last()));
                             string htmlCode = String.Empty;
@@ -297,8 +283,27 @@ namespace FavoImgs
         {
             ShowAppInfo();
             Initialize();
-            
             Settings.Load();
+
+            var options = new Options();
+            if (CommandLine.Parser.Default.ParseArguments(args, options))
+            {
+                Console.WriteLine("[ Options ]");
+
+                if (options.Continue)
+                {
+                    Console.WriteLine(" - Continue download from the oldest favorite tweet");
+                }
+
+                if (options.ResetDownloadPath)
+                {
+                    Settings.Current.DownloadPath = String.Empty;
+                    Console.WriteLine(" - Reset default download path");
+                }
+
+                Console.WriteLine();
+            }
+
             CheckDownloadPath();
 
             string consumerKey = Settings.Current.ConsumerKey;
@@ -326,7 +331,7 @@ namespace FavoImgs
             {
                 tokens = GetTwitterToken(consumerKey, consumerSecret, accessToken, accessTokenSecret);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 Console.ReadLine();
@@ -338,6 +343,17 @@ namespace FavoImgs
                 Directory.CreateDirectory(downloadPath);
 
             long maxId = 0;
+            if (options.Continue)
+            {
+                try
+                {
+                    maxId = TweetCache.GetOldestId();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
 
             for (int i = 0; i < 10; ++i)
             {
@@ -415,7 +431,7 @@ namespace FavoImgs
                             Console.WriteLine(ex.Message);
                         }
                     }
-    
+
                     Console.WriteLine();
                 }
 

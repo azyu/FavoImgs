@@ -78,6 +78,8 @@
     <Compile Include="Data\Settings.cs" />
     <Compile Include="Data\TweetCache.cs" />
     <Compile Include="Data\XmlFile.cs" />
+    <Compile Include="DownloadItem.cs" />
+    <Compile Include="Options.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Security\Security.cs" />
@@ -91,7 +93,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy $(SolutionDir)packages\System.Data.SQLite.Core.1.0.93.0\content\net40\x86\*.* $(TargetDir) /Y
-$(SolutionDir)\tools\libz.exe inject-dll --assembly $(TargetPath) --include $(TargetDir)*.dll --move</PostBuildEvent>
+REM $(SolutionDir)\tools\libz.exe inject-dll --assembly $(TargetPath) --include $(TargetDir)*.dll --move</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
