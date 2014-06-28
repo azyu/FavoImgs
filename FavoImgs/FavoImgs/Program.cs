@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -15,45 +16,28 @@ namespace FavoImgs
 {
     public class DownloadItem
     {
-        public DownloadItem(Uri uri, String fileName)
+        public DownloadItem(long tweetId, Uri uri, String fileName)
         {
+            TweetId = tweetId;
             Uri = uri;
             FileName = fileName;
         }
 
+        public long TweetId { get; set; }
         public Uri Uri { get; set; }
         public String FileName { get; set; }
     }
 
     class Program
     {
-        private static readonly string dataPath = 
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FavoImgs");
-
         private static void Initialize()
         {
             try
             {
-                InitializeDataDirectory();
+                Console.OutputEncoding = Encoding.Unicode;
 
                 if (!Data.TweetCache.IsCreated())
                     Data.TweetCache.Create();
-            }
-            catch
-            {
-                throw;
-            }
-        }
-
-        private static void InitializeDataDirectory()
-        {
-            if (String.IsNullOrEmpty(dataPath))
-                throw new DirectoryNotFoundException();
-
-            try
-            {
-                if (!Directory.Exists(dataPath))
-                    Directory.CreateDirectory(dataPath);
             }
             catch
             {
@@ -195,7 +179,7 @@ namespace FavoImgs
 
                     if (IsImageFile(uri.ToString()))
                     {
-                        downloadItems.Add(new DownloadItem(uri, uri.Segments.Last()));
+                        downloadItems.Add(new DownloadItem(twt.Id, uri, uri.Segments.Last()));
                     }
                     else
                     {
@@ -227,7 +211,7 @@ namespace FavoImgs
                                 foreach (var att in attributes)
                                 {
                                     var attUri = new Uri(att.Value);
-                                    downloadItems.Add(new DownloadItem(attUri, attUri.Segments.Last()));
+                                    downloadItems.Add(new DownloadItem(twt.Id, attUri, attUri.Segments.Last()));
                                 }
                             }
                         }
@@ -256,7 +240,7 @@ namespace FavoImgs
                                 foreach (var att in attributes)
                                 {
                                     var attUri = new Uri(att.Value);
-                                    downloadItems.Add(new DownloadItem(attUri, attUri.Segments.Last()));
+                                    downloadItems.Add(new DownloadItem(twt.Id, attUri, attUri.Segments.Last()));
                                 }
                             }
                         }
@@ -286,7 +270,7 @@ namespace FavoImgs
                                 foreach (var att in attributes)
                                 {
                                     var attUri = new Uri(att.Value);
-                                    downloadItems.Add(new DownloadItem(attUri, attUri.Segments.Last()));
+                                    downloadItems.Add(new DownloadItem(twt.Id, attUri, attUri.Segments.Last()));
                                 }
                             }
                         }
@@ -303,7 +287,7 @@ namespace FavoImgs
                     if (!IsImageFile(uri.ToString()))
                         continue;
 
-                    downloadItems.Add(new DownloadItem(uri, uri.Segments.Last()));
+                    downloadItems.Add(new DownloadItem(twt.Id, uri, uri.Segments.Last()));
                 }
             }
         }
@@ -333,6 +317,7 @@ namespace FavoImgs
             catch
             {
                 Console.WriteLine("Cannot read OAuth Token!");
+                Console.ReadLine();
                 return 1;
             }
 
@@ -344,6 +329,7 @@ namespace FavoImgs
             catch(Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Console.ReadLine();
                 return 1;
             }
 
@@ -361,6 +347,7 @@ namespace FavoImgs
                     arguments.Add("max_id", maxId - 1);
 
                 CoreTweet.Core.ListedResponse<Status> favorites = null;
+
                 try
                 {
                     favorites = tokens.Favorites.List(arguments);
@@ -368,6 +355,7 @@ namespace FavoImgs
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
+                    Console.ReadLine();
                     return 1;
                 }
 
@@ -381,16 +369,6 @@ namespace FavoImgs
                     string twtxt = ShowTweet(twt);
                     Console.WriteLine(twtxt);
 
-                    /*
-                    if (!TweetCache.IsExist(twt.Id))
-                        TweetCache.Add(twt);
-                    else if (TweetCache.IsImageTaken(twt.Id))
-                    {
-                        Console.WriteLine(" - already taken image. pass...\n");
-                        continue;
-                    }
-                    */
-
                     string dir = GetSubDirectoryName(
                         Settings.Current.DownloadPath,
                         Settings.Current.DirectoryNamingConvention,
@@ -398,8 +376,6 @@ namespace FavoImgs
 
                     if (!Directory.Exists(dir))
                         Directory.CreateDirectory(dir);
-
-                    bool isAllDownloaded = true;
 
                     var downloadItems = new List<DownloadItem>();
 
@@ -409,36 +385,46 @@ namespace FavoImgs
 
                     for (int j = 0; j < downloadItems.Count; ++j)
                     {
+                        if (TweetCache.IsImageTaken(downloadItems[j].TweetId, downloadItems[j].Uri.ToString()))
+                        {
+                            Console.ForegroundColor = ConsoleColor.DarkRed;
+                            Console.WriteLine(" - {0} (already downloaded. skip...)", downloadItems[j].Uri);
+                            Console.ResetColor();
+
+                            continue;
+                        }
+
                         try
                         {
                             WebClient wc = new WebClient();
                             string tempFilePath = Path.Combine(tempPath, downloadItems[j].FileName);
                             string realFilePath = Path.Combine(downloadPath, downloadItems[j].FileName);
 
-                            Console.WriteLine(" - Downloading... {0}", downloadItems[j].Uri);
+                            Console.ForegroundColor = ConsoleColor.DarkCyan;
+                            Console.WriteLine(" - {0}", downloadItems[j].Uri);
                             wc.DownloadFile(downloadItems[j].Uri, tempFilePath);
+                            Console.ResetColor();
 
                             // 탐색기 섬네일 캐시 문제로 인하여 임시 폴더에서 파일을 받은 다음, 해당 폴더로 이동
                             File.Move(tempFilePath, realFilePath);
+
+                            TweetCache.Add(downloadItems[j].TweetId, downloadItems[j].Uri.ToString());
                         }
                         catch (Exception ex)
                         {
-                            isAllDownloaded = false;
                             Console.WriteLine(ex.Message);
                         }
                     }
-
-                    // if( isAllDownloaded )
-                        // TweetCache.SetImageTaken(twt.Id);
     
                     Console.WriteLine();
                 }
 
-                Console.WriteLine("Limit: {0}/{1}, Reset: {2}",
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine(" [] Limit: {0}/{1}, Reset: {2}\n",
                     favorites.RateLimit.Remaining,
                     favorites.RateLimit.Limit,
                     favorites.RateLimit.Reset.LocalDateTime);
-
+                Console.ResetColor();
             }
 
             Console.WriteLine("Press ENTER to exit...");

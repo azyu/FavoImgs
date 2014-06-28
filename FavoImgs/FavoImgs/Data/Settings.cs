@@ -26,9 +26,7 @@ namespace FavoImgs.Data
     public class Settings
     {
         private static readonly string filePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "FavoImgs",
-            "Settings.xml");
+            Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Settings.xml");
 
         public static Settings GetDefaultSettings()
         {

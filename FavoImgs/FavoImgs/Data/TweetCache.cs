@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Data.SQLite;
 using System.IO;
+using System.Windows.Forms;
 
 namespace FavoImgs.Data
 {
     public class TweetCache
     {
         private static readonly string cachePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "FavoImgs",
-            "Tweets.db");
+             Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Cache.db");
 
         public static bool IsCreated()
         {
@@ -32,11 +31,11 @@ namespace FavoImgs.Data
                 string query = String.Empty;
 
                 query =
-                    "CREATE TABLE [MediaUris] (" +
-                    "[Id] bigint NOT NULL," +
-                    "[Uri] nvarchar(256) NOT NULL," +
-                    "[State] int NOT NULL," +
-                    "PRIMARY KEY ([Id], [Uri]);";
+                    "CREATE TABLE MediaUris (" +
+                    "Id bigint NOT NULL," +
+                    "Uri nvarchar(256) NOT NULL," +
+                    "State int NOT NULL," +
+                    "PRIMARY KEY (Id, Uri));";
 
                 cmd.CommandText = query;
                 cmd.ExecuteNonQuery();
@@ -122,32 +121,6 @@ namespace FavoImgs.Data
             }
         }
 
-        public static bool SetImageTakenState(long Id, string uri)
-        {
-            try
-            {
-                string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SQLiteConnection conn = new SQLiteConnection(connstr);
-                conn.Open();
-
-                SQLiteCommand cmd = new SQLiteCommand(conn);
-
-                string query = String.Empty;
-
-                query = @"UPDATE [MediaUris] SET [State] = 1 WHERE [Id] = @Id and [Uri] = @Uri";
-                cmd.CommandText = query;
-                cmd.Parameters.AddWithValue("@Id", Id);
-                cmd.Parameters.AddWithValue("@Uri", uri);
-                int rowcount = cmd.ExecuteNonQuery();
-
-                return (rowcount != 0);
-            }
-            catch
-            {
-                throw;
-            }
-        }
-
         public static bool IsImageTaken(long Id, string uri)
         {
             try
@@ -186,7 +159,7 @@ namespace FavoImgs.Data
 
                 string query = String.Empty;
 
-                query = @"SELECT Id FROM [Favorites] order by Id ASC limit 1";
+                query = @"SELECT Id FROM [MediaUris] order by Id ASC limit 1";
                 cmd.CommandText = query;
 
                 Int64 Id = Convert.ToInt64(cmd.ExecuteScalar());
@@ -198,7 +171,7 @@ namespace FavoImgs.Data
             }
         }
 
-        public static void Add(CoreTweet.Status status)
+        public static void Add(long Id, string uri)
         {
             try
             {
@@ -210,29 +183,13 @@ namespace FavoImgs.Data
 
                 string query = String.Empty;
 
-                query = @"INSERT INTO [Favorites] ([Id], [CreatedAt], [UserId], [Text], [State])
-                VALUES (@Id, @CreateAt, @UserId, @Text, 0)";
+                query = @"INSERT INTO [MediaUris] ([Id], [Uri], [State])
+                VALUES (@Id, @Uri, 1)";
                 cmd.CommandText = query;
-                cmd.Parameters.AddWithValue("@Id", status.Id);
-                cmd.Parameters.AddWithValue("@CreateAt", status.CreatedAt);
-                cmd.Parameters.AddWithValue("@UserId", status.User.Id);
-                cmd.Parameters.AddWithValue("@Text", status.Text);
+                cmd.Parameters.AddWithValue("@Id", Id);
+                cmd.Parameters.AddWithValue("@Uri", uri);
 
                 cmd.ExecuteNonQuery();
-
-                if (status.ExtendedEntities != null && status.ExtendedEntities.Media != null)
-                {
-                    foreach (var media in status.ExtendedEntities.Media)
-                    {
-                        query = "INSERT INTO [MediaUris] ([Id], [Uri]) VALUES (@Id, @Uri)";
-
-                        cmd.CommandText = query;
-                        cmd.Parameters.AddWithValue("@Id", status.Id);
-                        cmd.Parameters.AddWithValue("@Uri", media.MediaUrl);
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-
                 conn.Close();
             }
             catch (Exception ex)
