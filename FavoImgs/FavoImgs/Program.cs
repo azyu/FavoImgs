@@ -27,8 +27,6 @@ namespace FavoImgs
         {
             try
             {
-                Console.OutputEncoding = Encoding.Unicode;
-
                 if (!Data.TweetCache.IsCreated())
                     Data.TweetCache.Create();
             }
@@ -227,9 +225,19 @@ namespace FavoImgs
         [STAThread]
         static int Main(string[] args)
         {
-            ShowAppInfo();
-            Initialize();
-            Settings.Load();
+            try
+            {
+                ShowAppInfo();
+
+                Initialize();
+                Settings.Load();
+            }
+            catch(Exception ex)
+            {
+                WriteException(ex);
+                Console.ReadLine();
+                return 0;
+            }
 
             var options = new Options();
             if (CommandLine.Parser.Default.ParseArguments(args, options))
