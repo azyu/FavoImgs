@@ -71,16 +71,13 @@ namespace FavoImgs
             var doc = new HtmlAgilityPack.HtmlDocument();
             doc.LoadHtml(htmlCode);
 
-            var nodes = doc.DocumentNode.SelectNodes("//source");
+            var nodes = doc.DocumentNode.SelectNodes("//*[@id='media-full']/img");
             if (nodes == null)
                 return retval;
 
             foreach (var link in nodes)
             {
-                if (!link.Attributes.Any(x => x.Name == "type" && x.Value == "video/mp4"))
-                    continue;
-
-                var attributes = link.Attributes.Where(x => x.Name == "video-src").ToList();
+                var attributes = link.Attributes.Where(x => x.Name == "src").ToList();
                 foreach (var att in attributes)
                 {
                     retval.Add(new Uri(att.Value));
