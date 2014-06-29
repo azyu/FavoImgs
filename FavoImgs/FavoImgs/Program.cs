@@ -312,7 +312,7 @@ namespace FavoImgs
                 }
             }
 
-            int left = 10;
+            int left = 5;
             if (options.GetThemAll)
                 left = Int32.MaxValue;
 
@@ -338,13 +338,6 @@ namespace FavoImgs
                     {
                         Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.WriteLine(" [] Rate limit exceeded. Try again after 60 seconds.");
-                        Console.ResetColor();
-                    }
-
-                    if (favorites != null)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine(" [] Reset: {0}\n", favorites.RateLimit.Reset.LocalDateTime);
                         Console.ResetColor();
                     }
 
