@@ -8,40 +8,27 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Windows.Forms;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Windows.Forms;
 
 namespace FavoImgs
 {
     class Program
     {
-        private static readonly string dataPath = 
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FavoImgs");
+        private static void WriteException(Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(" - {0}", ex.Message);
+            Console.ResetColor();
+        }
 
         private static void Initialize()
         {
             try
             {
-                InitializeDataDirectory();
-
                 if (!Data.TweetCache.IsCreated())
                     Data.TweetCache.Create();
-            }
-            catch
-            {
-                throw;
-            }
-        }
-
-        private static void InitializeDataDirectory()
-        {
-            if (String.IsNullOrEmpty(dataPath))
-                throw new DirectoryNotFoundException();
-
-            try
-            {
-                if (!Directory.Exists(dataPath))
-                    Directory.CreateDirectory(dataPath);
             }
             catch
             {
@@ -62,7 +49,6 @@ namespace FavoImgs
             Console.WriteLine("FavoImgs {0}, Copyright (c) 2014, Azyu (@_uyza_)", version);
             Console.WriteLine("http://github.com/azyu/FavoImgs");
             Console.WriteLine("============================================================");
-            Console.WriteLine();
         }
 
         private static string ShowFolderBrowserDialog()
@@ -91,7 +77,7 @@ namespace FavoImgs
         private static string GetSubDirectoryName(string basePath, DirectoryNamingConvention convention, DateTimeOffset createdAt, string screenName)
         {
             string retpath = String.Empty;
-            switch(convention)
+            switch (convention)
             {
                 default:
                 case DirectoryNamingConvention.None:
@@ -101,7 +87,7 @@ namespace FavoImgs
                 case DirectoryNamingConvention.Date:
                     retpath = Path.Combine(basePath, createdAt.LocalDateTime.ToString("yyyyMMdd"));
                     break;
-                    
+
                 case DirectoryNamingConvention.ScreenName:
                     retpath = Path.Combine(basePath, screenName);
                     break;
@@ -123,7 +109,7 @@ namespace FavoImgs
             string pattern = @"^.*\.(jpg|JPG|gif|GIF|png|PNG)$";
             return Regex.IsMatch(uri, pattern);
         }
-        
+
         private static string ModifyImageUri(string uri)
         {
             string retval = String.Empty;
@@ -131,7 +117,7 @@ namespace FavoImgs
             // Twitter image
             if (uri.IndexOf("twimg.com") > 0)
             {
-                retval =  uri + ":orig";
+                retval = uri + ":orig";
             }
 
             return retval;
@@ -156,7 +142,7 @@ namespace FavoImgs
                 {
                     tokens = session.GetTokens(pin);
                 }
-                catch 
+                catch
                 {
                     throw;
                 }
@@ -173,13 +159,108 @@ namespace FavoImgs
             return tokens;
         }
 
+        private static void GetMediaUris(CoreTweet.Status twt, ref List<DownloadItem> downloadItems)
+        {
+            if (twt.Entities.Urls != null)
+            {
+                foreach (var url in twt.Entities.Urls)
+                {
+                    Uri uri = url.ExpandedUrl;
+                    
+                    IMediaProvider mediaProvider = null;
+
+                    if (IsImageFile(uri.ToString()))
+                    {
+                        downloadItems.Add(new DownloadItem(twt.Id, uri, uri.Segments.Last()));
+                    }
+                    else
+                    {
+                        if (uri.ToString().Contains("twitter.com"))
+                        {
+                            mediaProvider = new TwitterMp4();
+                        }
+                        else if (uri.ToString().Contains("twitpic.com"))
+                        {
+                            mediaProvider = new TwitPic();
+                        }
+                        else if (uri.ToString().Contains("yfrog.com"))
+                        {
+                            mediaProvider = new Yfrog();
+                        }
+
+                        if (mediaProvider != null)
+                        {
+                            try
+                            {
+                                List<Uri> mediaUris = mediaProvider.GetUri(uri);
+
+                                foreach (var eachUri in mediaUris)
+                                {
+                                    downloadItems.Add(new DownloadItem(twt.Id, eachUri, eachUri.Segments.Last()));
+                                }
+                            }
+                            catch(Exception ex)
+                            {
+                                WriteException(ex);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (twt.ExtendedEntities != null && twt.ExtendedEntities.Media != null)
+            {
+                foreach (var media in twt.ExtendedEntities.Media)
+                {
+                    Uri uri = media.MediaUrl;
+
+                    if (!IsImageFile(uri.ToString()))
+                        continue;
+
+                    downloadItems.Add(new DownloadItem(twt.Id, uri, uri.Segments.Last()));
+                }
+            }
+        }
+
         [STAThread]
         static int Main(string[] args)
         {
-            ShowAppInfo();
-            Initialize();
-            
-            Settings.Load();
+            try
+            {
+                ShowAppInfo();
+
+                Initialize();
+                Settings.Load();
+            }
+            catch(Exception ex)
+            {
+                WriteException(ex);
+                Console.ReadLine();
+                return 0;
+            }
+
+            var options = new Options();
+            if (CommandLine.Parser.Default.ParseArguments(args, options))
+            {
+                if (options.Continue)
+                {
+                    Console.WriteLine(" [Option] Continue download from the oldest favorite tweet");
+                }
+
+                if (options.ResetDownloadPath)
+                {
+                    Settings.Current.DownloadPath = String.Empty;
+                    Console.WriteLine(" [Option] Reset default download path");
+                }
+
+                if (options.GetThemAll)
+                {
+                    Console.WriteLine(" [Option] Get them all!");
+                }
+
+                Console.WriteLine();
+            }
+
             CheckDownloadPath();
 
             string consumerKey = Settings.Current.ConsumerKey;
@@ -198,6 +279,7 @@ namespace FavoImgs
             catch
             {
                 Console.WriteLine("Cannot read OAuth Token!");
+                Console.ReadLine();
                 return 1;
             }
 
@@ -206,9 +288,10 @@ namespace FavoImgs
             {
                 tokens = GetTwitterToken(consumerKey, consumerSecret, accessToken, accessTokenSecret);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                WriteException(ex);
+                Console.ReadLine();
                 return 1;
             }
 
@@ -217,8 +300,25 @@ namespace FavoImgs
                 Directory.CreateDirectory(downloadPath);
 
             long maxId = 0;
+            if (options.Continue)
+            {
+                try
+                {
+                    maxId = TweetCache.GetOldestId();
+                }
+                catch (Exception ex)
+                {
+                    WriteException(ex);
+                }
+            }
 
-            for (int i = 0; i < 5; ++i)
+            int left = 5;
+            if (options.GetThemAll)
+                left = Int32.MaxValue;
+
+            bool bRunning = true;
+            
+            while(bRunning)
             {
                 Dictionary<string, object> arguments = new Dictionary<string, object>();
                 arguments.Add("count", 200);
@@ -226,13 +326,28 @@ namespace FavoImgs
                     arguments.Add("max_id", maxId - 1);
 
                 CoreTweet.Core.ListedResponse<Status> favorites = null;
+
                 try
                 {
                     favorites = tokens.Favorites.List(arguments);
                 }
+                catch(TwitterException ex)
+                {
+                    // rate limit exceeded
+                    if(ex.Status == (HttpStatusCode)429)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine(" [] Rate limit exceeded. Try again after 60 seconds.");
+                        Console.ResetColor();
+                    }
+
+                    Thread.Sleep(60 * 1000);
+                    continue;
+                }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    WriteException(ex);
+                    Console.ReadLine();
                     return 1;
                 }
 
@@ -246,14 +361,6 @@ namespace FavoImgs
                     string twtxt = ShowTweet(twt);
                     Console.WriteLine(twtxt);
 
-                    if (!TweetCache.IsExist(twt.Id))
-                        TweetCache.Add(twt);
-                    else if (TweetCache.IsImageTaken(twt.Id))
-                    {
-                        Console.WriteLine(" - already taken image. pass...\n");
-                        continue;
-                    }
-
                     string dir = GetSubDirectoryName(
                         Settings.Current.DownloadPath,
                         Settings.Current.DirectoryNamingConvention,
@@ -262,91 +369,59 @@ namespace FavoImgs
                     if (!Directory.Exists(dir))
                         Directory.CreateDirectory(dir);
 
-                    bool isAllDownloaded = true;
-                    if( twt.Entities.Urls != null )
+                    var downloadItems = new List<DownloadItem>();
+
+                    GetMediaUris(twt, ref downloadItems);
+
+                    var tempPath = Path.GetTempPath();
+
+                    for (int j = 0; j < downloadItems.Count; ++j)
                     {
-                        foreach (var url in twt.Entities.Urls)
+                        if (TweetCache.IsImageTaken(downloadItems[j].TweetId, downloadItems[j].Uri.ToString()))
+                        {
+                            Console.ForegroundColor = ConsoleColor.DarkRed;
+                            Console.WriteLine(" - {0} (already downloaded. skip...)", downloadItems[j].Uri);
+                            Console.ResetColor();
+
+                            continue;
+                        }
+
+                        try
                         {
                             WebClient wc = new WebClient();
-                            Uri uri = url.ExpandedUrl;
+                            string tempFilePath = Path.Combine(tempPath, downloadItems[j].FileName);
+                            string realFilePath = Path.Combine(downloadPath, downloadItems[j].FileName);
 
-                            if (!IsImageFile(uri.ToString()))
-                                continue;
+                            Console.ForegroundColor = ConsoleColor.DarkCyan;
+                            Console.WriteLine(" - {0}", downloadItems[j].Uri);
+                            wc.DownloadFile(downloadItems[j].Uri, tempFilePath);
+                            Console.ResetColor();
 
-                            Console.WriteLine(" - Downloading... {0} (Url)", uri.ToString());
+                            // 탐색기 섬네일 캐시 문제로 인하여 임시 폴더에서 파일을 받은 다음, 해당 폴더로 이동
+                            File.Move(tempFilePath, realFilePath);
 
-                            try
-                            {
-                                wc.DownloadFile(uri, Path.Combine(dir, uri.Segments.Last()));
-                            }
-                            catch (Exception ex)
-                            {
-                                isAllDownloaded = false;
-                                Console.WriteLine(ex.Message);
-                            }
+                            TweetCache.Add(downloadItems[j].TweetId, downloadItems[j].Uri.ToString());
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteException(ex);
                         }
                     }
 
-                    if (twt.ExtendedEntities != null && twt.ExtendedEntities.Media != null)
-                    {
-                        foreach (var media in twt.ExtendedEntities.Media)
-                        {
-                            WebClient wc = new WebClient();
-                            Uri uri = media.MediaUrl;
-
-                            if (!IsImageFile(uri.ToString()))
-                                continue;
-
-                            Console.WriteLine(" - Downloading... {0} (Twitter image)", uri.ToString());
-
-                            try
-                            {
-                                string newuri = ModifyImageUri(uri.ToString());
-                                wc.DownloadFile(newuri, Path.Combine(dir, uri.Segments.Last()));
-                            }
-                            catch (Exception ex)
-                            {
-                                isAllDownloaded = false;
-                                Console.WriteLine(ex.Message);
-                            }
-                        }
-                    }
-                    else if( twt.Entities.Media != null )
-                    {
-                        foreach (var media in twt.Entities.Media)
-                        {
-                            WebClient wc = new WebClient();
-                            Uri uri = media.MediaUrl;
-
-                            if (!IsImageFile(uri.ToString()))
-                                continue;
-
-                            Console.WriteLine(" - Downloading... {0} (Twitter image)", uri.ToString());
-
-                            try
-                            {
-                                string newuri = ModifyImageUri(uri.ToString());
-                                wc.DownloadFile(newuri, Path.Combine(dir, uri.Segments.Last()));
-                            }
-                            catch (Exception ex)
-                            {
-                                isAllDownloaded = false;
-                                Console.WriteLine(ex.Message);
-                            }
-                        }
-                    }
-
-                    if( isAllDownloaded )
-                        TweetCache.SetImageTaken(twt.Id);
-    
                     Console.WriteLine();
                 }
 
-                Console.WriteLine("Limit: {0}/{1}, Reset: {2}",
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine(" [] Limit: {0}/{1}, Reset: {2}\n",
                     favorites.RateLimit.Remaining,
                     favorites.RateLimit.Limit,
-                    favorites.RateLimit.Reset.LocalDateTime.ToString());
+                    favorites.RateLimit.Reset.LocalDateTime);
+                Console.ResetColor();
 
+                --left;
+
+                if (left == 0 || favorites.Count == 0)
+                    bRunning = false;
             }
 
             Console.WriteLine("Press ENTER to exit...");
