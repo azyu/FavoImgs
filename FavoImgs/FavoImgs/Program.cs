@@ -387,11 +387,12 @@ namespace FavoImgs
                             continue;
                         }
 
+                        string tempFilePath = Path.Combine(tempPath, downloadItems[j].FileName);
+                        string realFilePath = Path.Combine(downloadPath, downloadItems[j].FileName);
+
                         try
                         {
                             WebClient wc = new WebClient();
-                            string tempFilePath = Path.Combine(tempPath, downloadItems[j].FileName);
-                            string realFilePath = Path.Combine(downloadPath, downloadItems[j].FileName);
 
                             Console.ForegroundColor = ConsoleColor.DarkCyan;
                             Console.WriteLine(" - {0}", downloadItems[j].Uri);
@@ -406,6 +407,8 @@ namespace FavoImgs
                         catch (Exception ex)
                         {
                             WriteException(ex);
+                            if (File.Exists(tempFilePath))
+                                File.Delete(tempFilePath);
                         }
                     }
 
