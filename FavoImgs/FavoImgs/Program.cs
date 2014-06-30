@@ -123,7 +123,6 @@ namespace FavoImgs
             return retval;
         }
 
-
         static CoreTweet.Tokens GetTwitterToken(string consumerKey, string consumerSecret, string accessToken, string accessTokenSecret)
         {
             Tokens tokens = null;
@@ -217,7 +216,9 @@ namespace FavoImgs
                     if (!IsImageFile(uri.ToString()))
                         continue;
 
-                    downloadItems.Add(new DownloadItem(twt.Id, uri, uri.Segments.Last()));
+                    Uri newUri = new Uri(ModifyImageUri(uri.ToString()));
+
+                    downloadItems.Add(new DownloadItem(twt.Id, newUri, uri.Segments.Last()));
                 }
             }
         }
