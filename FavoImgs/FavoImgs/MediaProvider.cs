@@ -11,6 +11,18 @@ namespace FavoImgs
         List<Uri> GetUri(Uri uri);
     }
 
+    class Tistory : IMediaProvider
+    {
+        public List<Uri> GetUri(Uri uri)
+        {
+            List<Uri> retval = new List<Uri>();
+
+            retval.Add(uri);
+            
+            return retval;
+        }
+    }
+
     class TwitterMp4 : IMediaProvider
     {
         public List<Uri> GetUri(Uri uri)
@@ -57,11 +69,12 @@ namespace FavoImgs
         {
             List<Uri> retval = new List<Uri>();
 
+            Uri newUrl = new Uri(String.Format("{0}/full", uri.ToString()));
             string htmlCode = String.Empty;
             try
             {
                 var htmlwc = new WebClient();
-                htmlCode = htmlwc.DownloadString(uri);
+                htmlCode = htmlwc.DownloadString(newUrl);
             }
             catch
             {
@@ -71,6 +84,7 @@ namespace FavoImgs
             var doc = new HtmlAgilityPack.HtmlDocument();
             doc.LoadHtml(htmlCode);
 
+            
             var nodes = doc.DocumentNode.SelectNodes("//*[@id='media-full']/img");
             if (nodes == null)
                 return retval;

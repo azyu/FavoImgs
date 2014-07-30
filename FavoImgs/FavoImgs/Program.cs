@@ -187,6 +187,11 @@ namespace FavoImgs
                             mediaProvider = new Yfrog();
                         }
 
+                        else if (uri.ToString().Contains("tistory.com/image"))
+                        {
+                            mediaProvider = new Tistory();
+                        }
+
                         if (mediaProvider != null)
                         {
                             try
@@ -195,7 +200,8 @@ namespace FavoImgs
 
                                 foreach (var eachUri in mediaUris)
                                 {
-                                    downloadItems.Add(new DownloadItem(twt.Id, eachUri, eachUri.Segments.Last()));
+                                    string filename = eachUri.Segments.Last();
+                                    downloadItems.Add(new DownloadItem(twt.Id, eachUri, filename));
                                 }
                             }
                             catch(Exception ex)
@@ -416,7 +422,7 @@ namespace FavoImgs
                 }
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(" [] API: {0}/{1}, Reset: {2}\n",
+                Console.WriteLine(" [] Limit: {0}/{1}, Reset: {2}\n",
                     favorites.RateLimit.Remaining,
                     favorites.RateLimit.Limit,
                     favorites.RateLimit.Reset.LocalDateTime);
