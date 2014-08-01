@@ -46,27 +46,18 @@ namespace FavoImgs
 		{
 			IMediaProvider mediaProvider = null;
 
-			if (uri.ToString().Contains("twitter.com"))
-			{
-				mediaProvider = new TwitterMp4();
-			}
-			else if (uri.ToString().Contains("twitpic.com"))
-			{
-				mediaProvider = new TwitPic();
-			}
-			else if (uri.ToString().Contains("yfrog.com"))
-			{
-				mediaProvider = new Yfrog();
-			}
-
-			else if (uri.ToString().Contains("tistory.com/image"))
-			{
-				mediaProvider = new Tistory();
-			}
-
-			else if (uri.ToString().Contains("tistory.com/original"))
-			{
-				mediaProvider = new Tistory();
+			if (uri.ToString ().Contains ("twitter.com")) {
+				mediaProvider = new TwitterMp4 ();
+			} else if (uri.ToString ().Contains ("twitpic.com")) {
+				mediaProvider = new TwitPic ();
+			} else if (uri.ToString ().Contains ("yfrog.com")) {
+				mediaProvider = new Yfrog ();
+			} else if (uri.ToString ().Contains ("tistory.com/image")) {
+				mediaProvider = new Tistory ();
+			} else if (uri.ToString ().Contains ("tistory.com/original")) {
+				mediaProvider = new Tistory ();
+			} else if (uri.ToString ().Contains ("p.twipple.jp")) {
+				mediaProvider = new Twipple ();
 			}
 
 			return mediaProvider;
