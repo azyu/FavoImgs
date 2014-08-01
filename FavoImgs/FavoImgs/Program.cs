@@ -466,7 +466,7 @@ namespace FavoImgs
                 }
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(" [] Limit: {0}/{1}, Reset: {2}\n",
+                Console.WriteLine(" [] API: {0}/{1}, Reset: {2}\n",
                     favorites.RateLimit.Remaining,
                     favorites.RateLimit.Limit,
                     favorites.RateLimit.Reset.LocalDateTime);
