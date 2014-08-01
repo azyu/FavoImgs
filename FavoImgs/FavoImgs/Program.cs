@@ -42,6 +42,36 @@ namespace FavoImgs
                 tweet.User.Name, tweet.User.ScreenName, tweet.CreatedAt.LocalDateTime, tweet.Text);
         }
 
+		private static IMediaProvider GetMediaProvider(Uri uri)
+		{
+			IMediaProvider mediaProvider = null;
+
+			if (uri.ToString().Contains("twitter.com"))
+			{
+				mediaProvider = new TwitterMp4();
+			}
+			else if (uri.ToString().Contains("twitpic.com"))
+			{
+				mediaProvider = new TwitPic();
+			}
+			else if (uri.ToString().Contains("yfrog.com"))
+			{
+				mediaProvider = new Yfrog();
+			}
+
+			else if (uri.ToString().Contains("tistory.com/image"))
+			{
+				mediaProvider = new Tistory();
+			}
+
+			else if (uri.ToString().Contains("tistory.com/original"))
+			{
+				mediaProvider = new Tistory();
+			}
+
+			return mediaProvider;
+		}
+
         private static void ShowAppInfo()
         {
             var version = Assembly.GetEntryAssembly().GetName().Version;
@@ -174,23 +204,7 @@ namespace FavoImgs
                     }
                     else
                     {
-                        if (uri.ToString().Contains("twitter.com"))
-                        {
-                            mediaProvider = new TwitterMp4();
-                        }
-                        else if (uri.ToString().Contains("twitpic.com"))
-                        {
-                            mediaProvider = new TwitPic();
-                        }
-                        else if (uri.ToString().Contains("yfrog.com"))
-                        {
-                            mediaProvider = new Yfrog();
-                        }
-
-                        else if (uri.ToString().Contains("tistory.com/image"))
-                        {
-                            mediaProvider = new Tistory();
-                        }
+						mediaProvider = GetMediaProvider(uri);
 
                         if (mediaProvider != null)
                         {
