@@ -272,6 +272,10 @@ namespace FavoImgs
 
                 Console.WriteLine();
             }
+            else
+            {
+                return 0;
+            }
 
             CheckDownloadPath();
 
