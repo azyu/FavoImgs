@@ -93,9 +93,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(SolutionDir)packages\System.Data.SQLite.Core.1.0.93.0\content\net40\x86\*.* $(TargetDir) /Y
-copy $(SolutionDir)helper\*.* $(TargetDir) /Y
-$(SolutionDir)\tools\libz.exe inject-dll --assembly $(TargetPath) --include $(TargetDir)*.dll --move</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
