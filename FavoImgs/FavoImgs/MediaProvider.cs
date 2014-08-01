@@ -19,9 +19,9 @@ namespace FavoImgs
 
 			string lastSegment = uri.Segments.Last();
 
-			Uri newUrl = new Uri(String.Format("http://p.twpl.jp/show/orig/{0}", lastSegment));
+			Uri newUri = new Uri(String.Format("http://p.twpl.jp/show/orig/{0}", lastSegment));
 
-			retval.Add(uri);
+			retval.Add(newUri);
 
 			return retval;
 		}
