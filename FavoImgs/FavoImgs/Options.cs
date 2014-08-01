@@ -25,7 +25,7 @@ namespace FavoImgs
         [ParserState]
         public IParserState ParserState { get; set; }
 
-        [HelpOption]
+        [HelpOption('h', "help")]
         public string GetUsage()
         {
             return HelpText.AutoBuild(this,

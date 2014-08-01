@@ -11,6 +11,34 @@ namespace FavoImgs
         List<Uri> GetUri(Uri uri);
     }
 
+	class Twipple : IMediaProvider
+	{
+		public List<Uri> GetUri(Uri uri)
+		{
+			List<Uri> retval = new List<Uri> ();
+
+			string lastSegment = uri.Segments.Last();
+
+			Uri newUri = new Uri(String.Format("http://p.twpl.jp/show/orig/{0}", lastSegment));
+
+			retval.Add(newUri);
+
+			return retval;
+		}
+	}
+
+    class Tistory : IMediaProvider
+    {
+        public List<Uri> GetUri(Uri uri)
+        {
+            List<Uri> retval = new List<Uri>();
+
+            retval.Add(uri);
+            
+            return retval;
+        }
+    }
+
     class TwitterMp4 : IMediaProvider
     {
         public List<Uri> GetUri(Uri uri)

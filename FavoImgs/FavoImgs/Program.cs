@@ -16,6 +16,18 @@ namespace FavoImgs
 {
     class Program
     {
+        private static string GetDefaultExtension(string mimeType)
+        {
+            string result;
+            object value;
+
+            var key = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(@"MIME\Database\Content Type\" + mimeType, false);
+            value = key != null ? key.GetValue("Extension", null) : null;
+            result = value != null ? value.ToString() : string.Empty;
+
+            return result;
+        }
+
         private static void WriteException(Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -40,6 +52,38 @@ namespace FavoImgs
         {
             return String.Format("{0} (@{1})  -- {2}\n{3}",
                 tweet.User.Name, tweet.User.ScreenName, tweet.CreatedAt.LocalDateTime, tweet.Text);
+        }
+
+        private static IMediaProvider GetMediaProvider(Uri uri)
+        {
+            IMediaProvider mediaProvider = null;
+
+            if (uri.ToString().Contains("twitter.com"))
+            {
+                mediaProvider = new TwitterMp4();
+            }
+            else if (uri.ToString().Contains("twitpic.com"))
+            {
+                mediaProvider = new TwitPic();
+            }
+            else if (uri.ToString().Contains("yfrog.com"))
+            {
+                mediaProvider = new Yfrog();
+            }
+            else if (uri.ToString().Contains("tistory.com/image"))
+            {
+                mediaProvider = new Tistory();
+            }
+            else if (uri.ToString().Contains("tistory.com/original"))
+            {
+                mediaProvider = new Tistory();
+            }
+            else if (uri.ToString().Contains("p.twipple.jp"))
+            {
+                mediaProvider = new Twipple();
+            }
+
+            return mediaProvider;
         }
 
         private static void ShowAppInfo()
@@ -165,7 +209,7 @@ namespace FavoImgs
                 foreach (var url in twt.Entities.Urls)
                 {
                     Uri uri = url.ExpandedUrl;
-                    
+
                     IMediaProvider mediaProvider = null;
 
                     if (IsImageFile(uri.ToString()))
@@ -174,18 +218,7 @@ namespace FavoImgs
                     }
                     else
                     {
-                        if (uri.ToString().Contains("twitter.com"))
-                        {
-                            mediaProvider = new TwitterMp4();
-                        }
-                        else if (uri.ToString().Contains("twitpic.com"))
-                        {
-                            mediaProvider = new TwitPic();
-                        }
-                        else if (uri.ToString().Contains("yfrog.com"))
-                        {
-                            mediaProvider = new Yfrog();
-                        }
+                        mediaProvider = GetMediaProvider(uri);
 
                         if (mediaProvider != null)
                         {
@@ -195,10 +228,11 @@ namespace FavoImgs
 
                                 foreach (var eachUri in mediaUris)
                                 {
-                                    downloadItems.Add(new DownloadItem(twt.Id, eachUri, eachUri.Segments.Last()));
+                                    string filename = eachUri.Segments.Last();
+                                    downloadItems.Add(new DownloadItem(twt.Id, eachUri, filename));
                                 }
                             }
-                            catch(Exception ex)
+                            catch (Exception ex)
                             {
                                 WriteException(ex);
                             }
@@ -233,7 +267,7 @@ namespace FavoImgs
                 Initialize();
                 Settings.Load();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 WriteException(ex);
                 Console.ReadLine();
@@ -260,6 +294,10 @@ namespace FavoImgs
                 }
 
                 Console.WriteLine();
+            }
+            else
+            {
+                return 0;
             }
 
             CheckDownloadPath();
@@ -318,8 +356,8 @@ namespace FavoImgs
                 left = Int32.MaxValue;
 
             bool bRunning = true;
-            
-            while(bRunning)
+
+            while (bRunning)
             {
                 Dictionary<string, object> arguments = new Dictionary<string, object>();
                 arguments.Add("count", 200);
@@ -332,10 +370,10 @@ namespace FavoImgs
                 {
                     favorites = tokens.Favorites.List(arguments);
                 }
-                catch(TwitterException ex)
+                catch (TwitterException ex)
                 {
                     // rate limit exceeded
-                    if(ex.Status == (HttpStatusCode)429)
+                    if (ex.Status == (HttpStatusCode)429)
                     {
                         Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.WriteLine(" [] Rate limit exceeded. Try again after 60 seconds.");
@@ -397,6 +435,18 @@ namespace FavoImgs
                             Console.ForegroundColor = ConsoleColor.DarkCyan;
                             Console.WriteLine(" - {0}", downloadItems[j].Uri);
                             wc.DownloadFile(downloadItems[j].Uri, tempFilePath);
+
+                            // 확장자가 붙지 않았을 경우, Content-Type으로 추론
+                            if (!Path.HasExtension(tempFilePath))
+                            {
+                                string extension = GetDefaultExtension(wc.ResponseHeaders["Content-Type"]);
+                                string newFilePath = String.Format("{0}{1}", tempFilePath, extension);
+
+                                File.Move(tempFilePath, newFilePath);
+                                tempFilePath = newFilePath;
+                                realFilePath = String.Format("{0}{1}", realFilePath, extension);
+                            }
+
                             Console.ResetColor();
 
                             // 탐색기 섬네일 캐시 문제로 인하여 임시 폴더에서 파일을 받은 다음, 해당 폴더로 이동
@@ -416,7 +466,7 @@ namespace FavoImgs
                 }
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(" [] Limit: {0}/{1}, Reset: {2}\n",
+                Console.WriteLine(" [] API: {0}/{1}, Reset: {2}\n",
                     favorites.RateLimit.Remaining,
                     favorites.RateLimit.Limit,
                     favorites.RateLimit.Reset.LocalDateTime);
