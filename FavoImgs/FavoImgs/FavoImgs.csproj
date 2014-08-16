@@ -80,6 +80,7 @@
     <Compile Include="Data\XmlFile.cs" />
     <Compile Include="DownloadItem.cs" />
     <Compile Include="MediaProvider.cs" />
+    <Compile Include="MimeHelper.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

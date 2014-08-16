@@ -16,18 +16,6 @@ namespace FavoImgs
 {
     class Program
     {
-        private static string GetDefaultExtension(string mimeType)
-        {
-            string result;
-            object value;
-
-            var key = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(@"MIME\Database\Content Type\" + mimeType, false);
-            value = key != null ? key.GetValue("Extension", null) : null;
-            result = value != null ? value.ToString() : string.Empty;
-
-            return result;
-        }
-
         private static void WriteException(Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -439,7 +427,7 @@ namespace FavoImgs
                             // 확장자가 붙지 않았을 경우, Content-Type으로 추론
                             if (!Path.HasExtension(tempFilePath))
                             {
-                                string extension = GetDefaultExtension(wc.ResponseHeaders["Content-Type"]);
+                                string extension = MimeHelper.GetFileExtension(wc.ResponseHeaders["Content-Type"]);
                                 string newFilePath = String.Format("{0}{1}", tempFilePath, extension);
 
                                 File.Move(tempFilePath, newFilePath);
