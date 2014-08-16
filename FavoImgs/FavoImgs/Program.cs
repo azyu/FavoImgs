@@ -263,6 +263,7 @@ namespace FavoImgs
             }
 
             var options = new Options();
+
             if (CommandLine.Parser.Default.ParseArguments(args, options))
             {
                 if (options.Continue)
@@ -279,6 +280,11 @@ namespace FavoImgs
                 if (options.GetThemAll)
                 {
                     Console.WriteLine(" [Option] Get them all!");
+                }
+
+                if( !String.IsNullOrEmpty(options.DownloadPath) )
+                {
+                    Settings.Current.DownloadPath = options.DownloadPath;
                 }
 
                 Console.WriteLine();
@@ -324,7 +330,22 @@ namespace FavoImgs
 
             string downloadPath = Settings.Current.DownloadPath;
             if (!Directory.Exists(downloadPath))
-                Directory.CreateDirectory(downloadPath);
+            {
+                try
+                {
+                    Directory.CreateDirectory(downloadPath);
+                    if (!Directory.Exists(downloadPath))
+                    {
+                        return 1;
+                    }
+                        
+                }
+                catch (Exception ex)
+                {
+                    WriteException(ex);
+                    return 1;
+                }
+            }
 
             long maxId = 0;
             if (options.Continue)

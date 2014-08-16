@@ -22,6 +22,10 @@ namespace FavoImgs
             HelpText = "Get them all!")]
         public bool GetThemAll { get; set; }
 
+        [Option("path", Required = false,
+            HelpText = "Specify download folder")]
+        public string DownloadPath { get; set; }
+
         [ParserState]
         public IParserState ParserState { get; set; }
 
