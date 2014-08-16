@@ -336,6 +336,7 @@ namespace FavoImgs
                     Directory.CreateDirectory(downloadPath);
                     if (!Directory.Exists(downloadPath))
                     {
+                        Console.WriteLine("Cannot create download folder!");
                         return 1;
                     }
                         
