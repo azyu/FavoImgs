@@ -14,6 +14,13 @@ using System.Windows.Forms;
 
 namespace FavoImgs
 {
+    enum TweetSource
+    {
+        Invalid = 0,
+        Favorites,
+        UserTimeline,
+    };
+
     class Program
     {
         private static void WriteException(Exception ex)
@@ -191,9 +198,9 @@ namespace FavoImgs
                                     downloadItems.Add(new DownloadItem(twt.Id, eachUri, filename));
                                 }
                             }
-                            catch (Exception ex)
+                            catch
                             {
-                                WriteException(ex);
+                                throw;
                             }
                         }
                     }
@@ -214,6 +221,24 @@ namespace FavoImgs
                     downloadItems.Add(new DownloadItem(twt.Id, newUri, uri.Segments.Last()));
                 }
             }
+        }
+
+        private static CoreTweet.Core.ListedResponse<Status> GetTweets(Tokens tokens, TweetSource source, Dictionary<string, object> arguments)
+        {
+            CoreTweet.Core.ListedResponse<Status> tweets = null;
+
+            switch(source)
+            { 
+                case TweetSource.Favorites:
+                    tweets = tokens.Favorites.List(arguments);
+                    break;
+
+                case TweetSource.UserTimeline:
+                    tweets = tokens.Statuses.UserTimeline(arguments);
+                    break;
+            }
+
+            return tweets;
         }
 
         [STAThread]
@@ -345,13 +370,12 @@ namespace FavoImgs
                 if (maxId != 0)
                     arguments.Add("max_id", maxId - 1);
 
-                CoreTweet.Core.ListedResponse<Status> favorites = null;
+
+                CoreTweet.Core.ListedResponse<Status> tweets = null;
 
                 try
                 {
-                    // favorites = tokens.Statuses.UserTimeline(arguments);
-                    // favorites = tokens.Lists.Statuses(arguments);
-                    favorites = tokens.Favorites.List(arguments);
+                    tweets = GetTweets(tokens, TweetSource.Favorites, arguments);
                 }
                 catch (TwitterException ex)
                 {
@@ -373,7 +397,7 @@ namespace FavoImgs
                     return 1;
                 }
 
-                foreach (var twt in favorites)
+                foreach (var twt in tweets)
                 {
                     if (maxId == 0)
                         maxId = twt.Id;
@@ -393,7 +417,14 @@ namespace FavoImgs
 
                     var downloadItems = new List<DownloadItem>();
 
-                    GetMediaUris(twt, ref downloadItems);
+                    try
+                    {
+                        GetMediaUris(twt, ref downloadItems);
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteException(ex);
+                    }
 
                     var tempPath = Path.GetTempPath();
 
@@ -450,19 +481,18 @@ namespace FavoImgs
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine(" [] API: {0}/{1}, Reset: {2}\n",
-                    favorites.RateLimit.Remaining,
-                    favorites.RateLimit.Limit,
-                    favorites.RateLimit.Reset.LocalDateTime);
+                    tweets.RateLimit.Remaining,
+                    tweets.RateLimit.Limit,
+                    tweets.RateLimit.Reset.LocalDateTime);
                 Console.ResetColor();
 
                 --left;
 
-                if (left == 0 || favorites.Count == 0)
+                if (left == 0 || tweets.Count == 0)
                     bRunning = false;
             }
 
-            Console.WriteLine("Press ENTER to exit...");
-            Console.ReadLine();
+            Console.WriteLine("Jobs done!");
 
             Settings.Current.Save();
             return 0;
