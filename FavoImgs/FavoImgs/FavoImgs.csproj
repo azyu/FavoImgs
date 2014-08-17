@@ -82,6 +82,7 @@
     <Compile Include="MediaProvider.cs" />
     <Compile Include="MimeHelper.cs" />
     <Compile Include="Options.cs" />
+    <Compile Include="PathHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Security\Security.cs" />

@@ -106,39 +106,10 @@ namespace FavoImgs
             Console.WriteLine("[] Download Path: {0}\n", Settings.Current.DownloadPath);
         }
 
-        private static string GetSubDirectoryName(string basePath, DirectoryNamingConvention convention, DateTimeOffset createdAt, string screenName)
-        {
-            string retpath = String.Empty;
-            switch (convention)
-            {
-                default:
-                case DirectoryNamingConvention.None:
-                    retpath = basePath;
-                    break;
-
-                case DirectoryNamingConvention.Date:
-                    retpath = Path.Combine(basePath, createdAt.LocalDateTime.ToString("yyyyMMdd"));
-                    break;
-
-                case DirectoryNamingConvention.ScreenName:
-                    retpath = Path.Combine(basePath, screenName);
-                    break;
-
-                case DirectoryNamingConvention.Date_ScreenName:
-                    retpath = Path.Combine(basePath, createdAt.LocalDateTime.ToString("yyyyMMdd"), screenName);
-                    break;
-
-                case DirectoryNamingConvention.ScreenName_Date:
-                    retpath = Path.Combine(basePath, screenName, createdAt.LocalDateTime.ToString("yyyyMMdd"));
-                    break;
-            }
-
-            return retpath;
-        }
 
         private static bool IsImageFile(string uri)
         {
-            string pattern = @"^.*\.(jpg|JPG|gif|GIF|png|PNG)$";
+            string pattern = @"^.*\.(jpg|JPG|jpeg|JPEG|gif|GIF|png|PNG)$";
             return Regex.IsMatch(uri, pattern);
         }
 
@@ -378,6 +349,8 @@ namespace FavoImgs
 
                 try
                 {
+                    // favorites = tokens.Statuses.UserTimeline(arguments);
+                    // favorites = tokens.Lists.Statuses(arguments);
                     favorites = tokens.Favorites.List(arguments);
                 }
                 catch (TwitterException ex)
@@ -410,7 +383,7 @@ namespace FavoImgs
                     string twtxt = ShowTweet(twt);
                     Console.WriteLine(twtxt);
 
-                    string dir = GetSubDirectoryName(
+                    string dir = PathHelper.GetSubDirectoryName(
                         Settings.Current.DownloadPath,
                         Settings.Current.DirectoryNamingConvention,
                         twt.CreatedAt, twt.User.ScreenName);
