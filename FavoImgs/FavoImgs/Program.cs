@@ -49,38 +49,6 @@ namespace FavoImgs
                 tweet.User.Name, tweet.User.ScreenName, tweet.CreatedAt.LocalDateTime, tweet.Text);
         }
 
-        private static IMediaProvider GetMediaProvider(Uri uri)
-        {
-            IMediaProvider mediaProvider = null;
-
-            if (uri.ToString().Contains("twitter.com"))
-            {
-                mediaProvider = new TwitterMp4();
-            }
-            else if (uri.ToString().Contains("twitpic.com"))
-            {
-                mediaProvider = new TwitPic();
-            }
-            else if (uri.ToString().Contains("yfrog.com"))
-            {
-                mediaProvider = new Yfrog();
-            }
-            else if (uri.ToString().Contains("tistory.com/image"))
-            {
-                mediaProvider = new Tistory();
-            }
-            else if (uri.ToString().Contains("tistory.com/original"))
-            {
-                mediaProvider = new Tistory();
-            }
-            else if (uri.ToString().Contains("p.twipple.jp"))
-            {
-                mediaProvider = new Twipple();
-            }
-
-            return mediaProvider;
-        }
-
         private static void ShowAppInfo()
         {
             var version = Assembly.GetEntryAssembly().GetName().Version;
@@ -166,61 +134,6 @@ namespace FavoImgs
             }
 
             return tokens;
-        }
-
-        private static void GetMediaUris(CoreTweet.Status twt, ref List<DownloadItem> downloadItems)
-        {
-            if (twt.Entities.Urls != null)
-            {
-                foreach (var url in twt.Entities.Urls)
-                {
-                    Uri uri = url.ExpandedUrl;
-
-                    IMediaProvider mediaProvider = null;
-
-                    if (IsImageFile(uri.ToString()))
-                    {
-                        downloadItems.Add(new DownloadItem(twt.Id, uri, uri.Segments.Last()));
-                    }
-                    else
-                    {
-                        mediaProvider = GetMediaProvider(uri);
-
-                        if (mediaProvider != null)
-                        {
-                            try
-                            {
-                                List<Uri> mediaUris = mediaProvider.GetUri(uri);
-
-                                foreach (var eachUri in mediaUris)
-                                {
-                                    string filename = eachUri.Segments.Last();
-                                    downloadItems.Add(new DownloadItem(twt.Id, eachUri, filename));
-                                }
-                            }
-                            catch
-                            {
-                                throw;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (twt.ExtendedEntities != null && twt.ExtendedEntities.Media != null)
-            {
-                foreach (var media in twt.ExtendedEntities.Media)
-                {
-                    Uri uri = media.MediaUrl;
-
-                    if (!IsImageFile(uri.ToString()))
-                        continue;
-
-                    Uri newUri = new Uri(ModifyImageUri(uri.ToString()));
-
-                    downloadItems.Add(new DownloadItem(twt.Id, newUri, uri.Segments.Last()));
-                }
-            }
         }
 
         private static CoreTweet.Core.ListedResponse<Status> GetTweets(Tokens tokens, TweetSource source, Dictionary<string, object> arguments)
@@ -401,7 +314,7 @@ namespace FavoImgs
 
                     try
                     {
-                        GetMediaUris(twt, ref downloadItems);
+                        TweetHelper.GetMediaUris(twt, ref downloadItems);
                     }
                     catch (Exception ex)
                     {
