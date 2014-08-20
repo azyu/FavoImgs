@@ -444,39 +444,10 @@ namespace FavoImgs
 
                         string tempFilePath = Path.Combine(tempPath, downloadItems[j].FileName);
                         string realFilePath = Path.Combine(downloadPath, downloadItems[j].FileName);
+                        long tweetId = downloadItems[j].TweetId;
+                        Uri uri = downloadItems[j].Uri;
 
-                        try
-                        {
-                            WebClient wc = new WebClient();
-
-                            Console.ForegroundColor = ConsoleColor.DarkCyan;
-                            Console.WriteLine(" - {0}", downloadItems[j].Uri);
-                            wc.DownloadFile(downloadItems[j].Uri, tempFilePath);
-
-                            // 확장자가 붙지 않았을 경우, Content-Type으로 추론
-                            if (!Path.HasExtension(tempFilePath))
-                            {
-                                string extension = MimeHelper.GetFileExtension(wc.ResponseHeaders["Content-Type"]);
-                                string newFilePath = String.Format("{0}{1}", tempFilePath, extension);
-
-                                File.Move(tempFilePath, newFilePath);
-                                tempFilePath = newFilePath;
-                                realFilePath = String.Format("{0}{1}", realFilePath, extension);
-                            }
-
-                            Console.ResetColor();
-
-                            // 탐색기 섬네일 캐시 문제로 인하여 임시 폴더에서 파일을 받은 다음, 해당 폴더로 이동
-                            File.Move(tempFilePath, realFilePath);
-
-                            TweetCache.Add(downloadItems[j].TweetId, downloadItems[j].Uri.ToString());
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteException(ex);
-                            if (File.Exists(tempFilePath))
-                                File.Delete(tempFilePath);
-                        }
+                        DownloadFile(tempFilePath, realFilePath, tweetId, uri);
                     }
 
                     Console.WriteLine();
@@ -499,6 +470,42 @@ namespace FavoImgs
 
             Settings.Current.Save();
             return 0;
+        }
+
+        private static void DownloadFile(string tempFilePath, string realFilePath, long tweetId, Uri uri)
+        {
+            try
+            {
+                WebClient wc = new WebClient();
+
+                Console.ForegroundColor = ConsoleColor.DarkCyan;
+                Console.WriteLine(" - {0}", uri);
+                wc.DownloadFile(uri, tempFilePath);
+
+                // 확장자가 붙지 않았을 경우, Content-Type으로 추론
+                if (!Path.HasExtension(tempFilePath))
+                {
+                    string extension = MimeHelper.GetFileExtension(wc.ResponseHeaders["Content-Type"]);
+                    string newFilePath = String.Format("{0}{1}", tempFilePath, extension);
+
+                    File.Move(tempFilePath, newFilePath);
+                    tempFilePath = newFilePath;
+                    realFilePath = String.Format("{0}{1}", realFilePath, extension);
+                }
+
+                Console.ResetColor();
+
+                // 탐색기 섬네일 캐시 문제로 인하여 임시 폴더에서 파일을 받은 다음, 해당 폴더로 이동
+                File.Move(tempFilePath, realFilePath);
+
+                TweetCache.Add(tweetId, uri.ToString());
+            }
+            catch (Exception ex)
+            {
+                WriteException(ex);
+                if (File.Exists(tempFilePath))
+                    File.Delete(tempFilePath);
+            }
         }
     }
 }
