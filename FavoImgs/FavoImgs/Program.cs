@@ -313,9 +313,12 @@ namespace FavoImgs
             }
 
             Tokens tokens = null;
+            UserResponse myInfo = null;
+
             try
             {
                 tokens = GetTwitterToken(consumerKey, consumerSecret, accessToken, accessTokenSecret);
+                myInfo = tokens.Account.VerifyCredentials();
             }
             catch (Exception ex)
             {
