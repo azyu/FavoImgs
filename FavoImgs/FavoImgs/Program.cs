@@ -262,28 +262,7 @@ namespace FavoImgs
 
             if (CommandLine.Parser.Default.ParseArguments(args, options))
             {
-                if (options.Continue)
-                {
-                    Console.WriteLine(" [Option] Continue download from the oldest favorite tweet");
-                }
-
-                if (options.ResetDownloadPath)
-                {
-                    Settings.Current.DownloadPath = String.Empty;
-                    Console.WriteLine(" [Option] Reset default download path");
-                }
-
-                if (options.GetThemAll)
-                {
-                    Console.WriteLine(" [Option] Get them all!");
-                }
-
-                if( !String.IsNullOrEmpty(options.DownloadPath) )
-                {
-                    Settings.Current.DownloadPath = options.DownloadPath;
-                }
-
-                Console.WriteLine();
+                PrintOption(options);
             }
             else
             {
@@ -466,10 +445,36 @@ namespace FavoImgs
                     bRunning = false;
             }
 
-            Console.WriteLine("Jobs done!");
+            Console.WriteLine("Work complete!");
 
             Settings.Current.Save();
             return 0;
+        }
+
+        private static void PrintOption(Options options)
+        {
+            if (options.Continue)
+            {
+                Console.WriteLine(" [Option] Continue download from the oldest favorite tweet");
+            }
+
+            if (options.ResetDownloadPath)
+            {
+                Settings.Current.DownloadPath = String.Empty;
+                Console.WriteLine(" [Option] Reset default download path");
+            }
+
+            if (options.GetThemAll)
+            {
+                Console.WriteLine(" [Option] Get them all!");
+            }
+
+            if (!String.IsNullOrEmpty(options.DownloadPath))
+            {
+                Settings.Current.DownloadPath = options.DownloadPath;
+            }
+
+            Console.WriteLine();
         }
 
         private static void DownloadFile(string tempFilePath, string realFilePath, long tweetId, Uri uri)
