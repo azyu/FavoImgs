@@ -6,32 +6,51 @@ namespace FavoImgs
 {
     class PathHelper
     {
-        public static string GetSubDirectoryName(string basePath, DirectoryNamingConvention convention, DateTimeOffset createdAt, string screenName)
+        public static string GetSubDirectoryName(Options options)
         {
             string retpath = String.Empty;
+
+            switch (options.TweetSource)
+            {
+                default:
+                case TweetSource.Favorites:
+                    retpath = options.DownloadPath;
+                    break;
+
+                case TweetSource.Lists:
+                    retpath = Path.Combine(options.DownloadPath, "lists", options.Slug);
+                    break;
+
+                case TweetSource.Tweets:
+                    retpath = Path.Combine(options.DownloadPath, "tweets", options.ScreenName);
+                    break;
+            }
+
+            /*
             switch (convention)
             {
                 default:
                 case DirectoryNamingConvention.None:
-                    retpath = basePath;
+                    retpath = options.DownloadPath;
                     break;
 
                 case DirectoryNamingConvention.Date:
-                    retpath = Path.Combine(basePath, createdAt.LocalDateTime.ToString("yyyyMM"));
+                    retpath = Path.Combine(options.DownloadPath, createdAt.LocalDateTime.ToString("yyyyMM"));
                     break;
 
                 case DirectoryNamingConvention.ScreenName:
-                    retpath = Path.Combine(basePath, screenName);
+                    retpath = Path.Combine(options.DownloadPath, screenName);
                     break;
 
                 case DirectoryNamingConvention.Date_ScreenName:
-                    retpath = Path.Combine(basePath, createdAt.LocalDateTime.ToString("yyyyMM"), screenName);
+                    retpath = Path.Combine(options.DownloadPath, createdAt.LocalDateTime.ToString("yyyyMM"), screenName);
                     break;
 
                 case DirectoryNamingConvention.ScreenName_Date:
-                    retpath = Path.Combine(basePath, screenName, createdAt.LocalDateTime.ToString("yyyyMM"));
+                    retpath = Path.Combine(options.DownloadPath, screenName, createdAt.LocalDateTime.ToString("yyyyMM"));
                     break;
             }
+            */
 
             return retpath;
         }

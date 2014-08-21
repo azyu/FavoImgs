@@ -25,9 +25,9 @@ namespace FavoImgs
             HelpText = "Specify source location")]
         public string Source { get; set; }
 
-        [Option("source_slug", Required = false,
+        [Option("slug", Required = false,
             HelpText = "Identify a list by its slug")]
-        public string SourceSlug { get; set; }
+        public string Slug { get; set; }
 
         [ParserState]
         public IParserState ParserState { get; set; }
@@ -37,7 +37,9 @@ namespace FavoImgs
         {
             return HelpText.AutoBuild(this,
                 (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));
-
         }
+
+        public TweetSource TweetSource { get; set; }
+        public string ScreenName { get; set; }
     }
 }

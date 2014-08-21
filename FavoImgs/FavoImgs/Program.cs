@@ -17,8 +17,9 @@ namespace FavoImgs
     enum TweetSource
     {
         Invalid = 0,
+        Tweets,
         Favorites,
-        UserTimeline,
+        Lists,
     };
 
     class Program
@@ -71,7 +72,6 @@ namespace FavoImgs
 
         private static void CheckDownloadPath()
         {
-
             if (String.IsNullOrEmpty(Settings.Current.DownloadPath))
             {
                 string downloadPath = ShowFolderBrowserDialog();
@@ -136,18 +136,27 @@ namespace FavoImgs
             return tokens;
         }
 
-        private static CoreTweet.Core.ListedResponse<Status> GetTweets(Tokens tokens, TweetSource source, Dictionary<string, object> arguments)
+        private static CoreTweet.Core.ListedResponse<Status> GetTweets(
+            Tokens tokens, Options options, Dictionary<string, object> arguments)
         {
             CoreTweet.Core.ListedResponse<Status> tweets = null;
 
-            switch(source)
+            Console.WriteLine("Get tweets from Twitter...");
+
+            switch (options.TweetSource)
             { 
                 case TweetSource.Favorites:
                     tweets = tokens.Favorites.List(arguments);
                     break;
 
-                case TweetSource.UserTimeline:
+                case TweetSource.Tweets:
                     tweets = tokens.Statuses.UserTimeline(arguments);
+                    break;
+
+                case TweetSource.Lists:
+                    arguments.Add("slug", options.Slug);
+                    arguments.Add("owner_screen_name", options.ScreenName);
+                    tweets = tokens.Lists.Statuses(arguments);
                     break;
             }
 
@@ -175,7 +184,8 @@ namespace FavoImgs
 
             if (CommandLine.Parser.Default.ParseArguments(args, options))
             {
-                PrintOption(options);
+                if (!ApplyOptions(options))
+                    return 0;
             }
             else
             {
@@ -211,6 +221,7 @@ namespace FavoImgs
             {
                 tokens = GetTwitterToken(consumerKey, consumerSecret, accessToken, accessTokenSecret);
                 myInfo = tokens.Account.VerifyCredentials();
+                options.ScreenName = myInfo.ScreenName;
             }
             catch (Exception ex)
             {
@@ -219,13 +230,17 @@ namespace FavoImgs
                 return 1;
             }
 
-            string downloadPath = Settings.Current.DownloadPath;
-            if (!Directory.Exists(downloadPath))
+            if(String.IsNullOrEmpty(options.DownloadPath))
+            {
+                options.DownloadPath = Settings.Current.DownloadPath;
+            }
+
+            if (!Directory.Exists(options.DownloadPath))
             {
                 try
                 {
-                    Directory.CreateDirectory(downloadPath);
-                    if (!Directory.Exists(downloadPath))
+                    Directory.CreateDirectory(options.DownloadPath);
+                    if (!Directory.Exists(options.DownloadPath))
                     {
                         Console.WriteLine("Cannot create download folder!");
                         return 1;
@@ -270,7 +285,7 @@ namespace FavoImgs
 
                 try
                 {
-                    tweets = GetTweets(tokens, TweetSource.Favorites, arguments);
+                    tweets = GetTweets(tokens, options, arguments);
                 }
                 catch (TwitterException ex)
                 {
@@ -280,10 +295,16 @@ namespace FavoImgs
                         Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.WriteLine(" [] Rate limit exceeded. Try again after 60 seconds.");
                         Console.ResetColor();
-                    }
 
-                    Thread.Sleep(60 * 1000);
-                    continue;
+                        Thread.Sleep(60 * 1000);
+                        continue;
+                    }
+                    else
+                    {
+                        WriteException(ex);
+                        Console.ReadLine();
+                        return 1;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -302,13 +323,10 @@ namespace FavoImgs
                     string twtxt = ShowTweet(twt);
                     Console.WriteLine(twtxt);
 
-                    string dir = PathHelper.GetSubDirectoryName(
-                        Settings.Current.DownloadPath,
-                        Settings.Current.DirectoryNamingConvention,
-                        twt.CreatedAt, twt.User.ScreenName);
+                    string finalPath = PathHelper.GetSubDirectoryName(options);
 
-                    if (!Directory.Exists(dir))
-                        Directory.CreateDirectory(dir);
+                    if (!Directory.Exists(finalPath))
+                        Directory.CreateDirectory(finalPath);
 
                     var downloadItems = new List<DownloadItem>();
 
@@ -335,7 +353,7 @@ namespace FavoImgs
                         }
 
                         string tempFilePath = Path.Combine(tempPath, downloadItems[j].FileName);
-                        string realFilePath = Path.Combine(downloadPath, downloadItems[j].FileName);
+                        string realFilePath = Path.Combine(finalPath, downloadItems[j].FileName);
                         long tweetId = downloadItems[j].TweetId;
                         Uri uri = downloadItems[j].Uri;
 
@@ -364,8 +382,29 @@ namespace FavoImgs
             return 0;
         }
 
-        private static void PrintOption(Options options)
+        private static bool ApplyOptions(Options options)
         {
+            options.TweetSource = TweetSource.Favorites;
+
+            var source = options.Source.ToLower();
+            if (source == "list")
+            {
+                options.TweetSource = TweetSource.Lists;
+
+                if (String.IsNullOrEmpty(options.Slug))
+                {
+                    Console.WriteLine(" - Error: Missiong required option 'Slug'!");
+                    return false;
+                }
+
+                Console.WriteLine(" [Option] Source: List ({0})", options.Slug);
+            }
+            else if (source == "tweets")
+            {
+                options.TweetSource = TweetSource.Tweets;
+                Console.WriteLine(" [Option] Source: Tweets");
+            }
+
             if (options.Continue)
             {
                 Console.WriteLine(" [Option] Continue download from the oldest favorite tweet");
@@ -388,6 +427,7 @@ namespace FavoImgs
             }
 
             Console.WriteLine();
+            return true;
         }
 
         private static void DownloadFile(string tempFilePath, string realFilePath, long tweetId, Uri uri)
