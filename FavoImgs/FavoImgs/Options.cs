@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using CommandLine;
+﻿using CommandLine;
 using CommandLine.Text;
-using CommandLine.Parsing;
 
 namespace FavoImgs
 {
@@ -26,6 +21,14 @@ namespace FavoImgs
             HelpText = "Specify download folder")]
         public string DownloadPath { get; set; }
 
+        [Option("source", Required = false,
+            HelpText = "Specify source location")]
+        public string Source { get; set; }
+
+        [Option("source_slug", Required = false,
+            HelpText = "Identify a list by its slug")]
+        public string SourceSlug { get; set; }
+
         [ParserState]
         public IParserState ParserState { get; set; }
 
@@ -34,6 +37,7 @@ namespace FavoImgs
         {
             return HelpText.AutoBuild(this,
                 (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));
+
         }
     }
 }
