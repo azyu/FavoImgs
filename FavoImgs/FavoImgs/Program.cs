@@ -276,11 +276,12 @@ namespace FavoImgs
 
             while (bRunning)
             {
+                const int TWEET_COUNT_PER_API = 200;
+
                 Dictionary<string, object> arguments = new Dictionary<string, object>();
-                arguments.Add("count", 200);
+                arguments.Add("count", TWEET_COUNT_PER_API);
                 if (maxId != 0)
                     arguments.Add("max_id", maxId - 1);
-
 
                 CoreTweet.Core.ListedResponse<Status> tweets = null;
 
