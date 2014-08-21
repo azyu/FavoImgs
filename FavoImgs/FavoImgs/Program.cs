@@ -391,23 +391,26 @@ namespace FavoImgs
         {
             options.TweetSource = TweetSource.Favorites;
 
-            var source = options.Source.ToLower();
-            if (source == "list")
+            if( !String.IsNullOrEmpty(options.Source) )
             {
-                options.TweetSource = TweetSource.Lists;
-
-                if (String.IsNullOrEmpty(options.Slug))
+                var source = options.Source.ToLower();
+                if (source == "list")
                 {
-                    Console.WriteLine(" - Error: Missiong required option 'Slug'!");
-                    return false;
-                }
+                    options.TweetSource = TweetSource.Lists;
 
-                Console.WriteLine(" [Option] Source: List ({0})", options.Slug);
-            }
-            else if (source == "tweets")
-            {
-                options.TweetSource = TweetSource.Tweets;
-                Console.WriteLine(" [Option] Source: Tweets");
+                    if (String.IsNullOrEmpty(options.Slug))
+                    {
+                        Console.WriteLine(" - Error: Missiong required option 'Slug'!");
+                        return false;
+                    }
+
+                    Console.WriteLine(" [Option] Source: List ({0})", options.Slug);
+                }
+                else if (source == "tweets")
+                {
+                    options.TweetSource = TweetSource.Tweets;
+                    Console.WriteLine(" [Option] Source: Tweets");
+                }
             }
 
             if (options.Continue)
