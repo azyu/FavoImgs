@@ -172,6 +172,7 @@ namespace FavoImgs
 
                 Initialize();
                 Settings.Load();
+                Statistics.Initialize();
             }
             catch (Exception ex)
             {
@@ -360,6 +361,7 @@ namespace FavoImgs
                         DownloadFile(tempFilePath, realFilePath, tweetId, uri);
                     }
 
+                    Statistics.Current.TweetCount += 1;
                     Console.WriteLine();
                 }
 
@@ -377,6 +379,9 @@ namespace FavoImgs
             }
 
             Console.WriteLine("Work complete!");
+
+            Console.WriteLine("Tweet(s): {0}", Statistics.Current.TweetCount);
+            Console.WriteLine("Media Download(s): {0}", Statistics.Current.DownloadCount);
 
             Settings.Current.Save();
             return 0;
@@ -457,6 +462,8 @@ namespace FavoImgs
                 File.Move(tempFilePath, realFilePath);
 
                 TweetCache.Add(tweetId, uri.ToString());
+
+                Statistics.Current.DownloadCount += 1;
             }
             catch (Exception ex)
             {
