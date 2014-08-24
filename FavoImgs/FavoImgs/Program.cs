@@ -306,7 +306,7 @@ namespace FavoImgs
                     if (ex.Status == (HttpStatusCode)429)
                     {
                         Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine(" [] Rate limit exceeded. Try again after 60 seconds.");
+                        Console.WriteLine(" [] API rate limit exceeded. Try again after 60 seconds...");
                         Console.ResetColor();
 
                         Thread.Sleep(60 * 1000);
@@ -354,6 +354,7 @@ namespace FavoImgs
 
                     var tempPath = Path.GetTempPath();
 
+                    Statistics.Current.DownloadCount += downloadItems.Count;
                     for (int j = 0; j < downloadItems.Count; ++j)
                     {
                         if (TweetCache.IsImageTaken(downloadItems[j].TweetId, downloadItems[j].Uri.ToString()))
@@ -391,9 +392,11 @@ namespace FavoImgs
             }
 
             Console.WriteLine("Work complete!");
+            Console.WriteLine();
 
-            Console.WriteLine("Tweet(s): {0}", Statistics.Current.TweetCount);
-            Console.WriteLine("Media Download(s): {0}", Statistics.Current.DownloadCount);
+            Console.WriteLine(" - Tweet(s): {0}", Statistics.Current.TweetCount);
+            Console.WriteLine(" - Media Url(s): {0}", Statistics.Current.DownloadCount);
+            Console.WriteLine(" - Downloaded file(s): {0}", Statistics.Current.DownloadedCount);
 
             Settings.Current.Save();
             return 0;
@@ -478,7 +481,7 @@ namespace FavoImgs
 
                 TweetCache.Add(tweetId, uri.ToString());
 
-                Statistics.Current.DownloadCount += 1;
+                Statistics.Current.DownloadedCount += 1;
             }
             catch (Exception ex)
             {

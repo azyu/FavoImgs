@@ -10,7 +10,7 @@
         }
 
         public int TweetCount { get; set; }
-
         public int DownloadCount { get; set; }
+        public int DownloadedCount { get; set; }
     }
 }
