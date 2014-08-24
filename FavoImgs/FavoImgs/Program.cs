@@ -141,10 +141,12 @@ namespace FavoImgs
         {
             CoreTweet.Core.ListedResponse<Status> tweets = null;
 
-            Console.WriteLine("Get tweets from Twitter...");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(" [] Get tweet(s) from Twitter...");
+            Console.ResetColor();
 
             switch (options.TweetSource)
-            { 
+            {
                 case TweetSource.Favorites:
                     tweets = tokens.Favorites.List(arguments);
                     break;
@@ -231,7 +233,7 @@ namespace FavoImgs
                 return 1;
             }
 
-            if(String.IsNullOrEmpty(options.DownloadPath))
+            if (String.IsNullOrEmpty(options.DownloadPath))
             {
                 options.DownloadPath = Settings.Current.DownloadPath;
             }
@@ -246,7 +248,7 @@ namespace FavoImgs
                         Console.WriteLine("Cannot create download folder!");
                         return 1;
                     }
-                        
+
                 }
                 catch (Exception ex)
                 {
@@ -392,7 +394,7 @@ namespace FavoImgs
         {
             options.TweetSource = TweetSource.Favorites;
 
-            if( !String.IsNullOrEmpty(options.Source) )
+            if (!String.IsNullOrEmpty(options.Source))
             {
                 var source = options.Source.ToLower();
                 if (source == "list")
