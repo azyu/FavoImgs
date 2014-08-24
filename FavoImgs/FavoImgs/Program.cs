@@ -291,6 +291,15 @@ namespace FavoImgs
                 {
                     tweets = GetTweets(tokens, options, arguments);
                 }
+
+                catch (WebException ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine(" [] {0}. Try again...", ex.Message);
+                    Console.ResetColor();
+
+                    continue;
+                }
                 catch (TwitterException ex)
                 {
                     // rate limit exceeded
