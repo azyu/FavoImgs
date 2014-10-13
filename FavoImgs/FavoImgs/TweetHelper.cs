@@ -66,6 +66,9 @@ namespace FavoImgs
             }
         }
 
+        /// <summary>
+        /// 이미지 주소를 통해 어떤 서비스의 이미지인지 찾아냄
+        /// </summary>
         private static IMediaProvider GetMediaProvider(Uri uri)
         {
             IMediaProvider mediaProvider = null;
@@ -104,6 +107,9 @@ namespace FavoImgs
             return Regex.IsMatch(uri, pattern);
         }
 
+        /// <summary>
+        /// 이미지 주소를 수정할 필요가 있을 경우 수정
+        /// </summary>
         private static string ModifyImageUri(string uri)
         {
             string retval = String.Empty;

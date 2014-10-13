@@ -11,21 +11,21 @@ namespace FavoImgs
         List<Uri> GetUri(Uri uri);
     }
 
-	class Twipple : IMediaProvider
-	{
-		public List<Uri> GetUri(Uri uri)
-		{
-			List<Uri> retval = new List<Uri> ();
+    class Twipple : IMediaProvider
+    {
+        public List<Uri> GetUri(Uri uri)
+        {
+            List<Uri> retval = new List<Uri>();
 
-			string lastSegment = uri.Segments.Last();
+            string lastSegment = uri.Segments.Last();
 
-			Uri newUri = new Uri(String.Format("http://p.twpl.jp/show/orig/{0}", lastSegment));
+            Uri newUri = new Uri(String.Format("http://p.twpl.jp/show/orig/{0}", lastSegment));
 
-			retval.Add(newUri);
+            retval.Add(newUri);
 
-			return retval;
-		}
-	}
+            return retval;
+        }
+    }
 
     class Tistory : IMediaProvider
     {
@@ -34,7 +34,7 @@ namespace FavoImgs
             List<Uri> retval = new List<Uri>();
 
             retval.Add(uri);
-            
+
             return retval;
         }
     }
@@ -100,7 +100,7 @@ namespace FavoImgs
             var doc = new HtmlAgilityPack.HtmlDocument();
             doc.LoadHtml(htmlCode);
 
-            
+
             var nodes = doc.DocumentNode.SelectNodes("//*[@id='media-full']/img");
             if (nodes == null)
                 return retval;
