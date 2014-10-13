@@ -14,7 +14,7 @@ namespace FavoImgs
             {
                 default:
                 case TweetSource.Favorites:
-                    retpath = options.DownloadPath;
+                    retpath = Path.Combine(options.DownloadPath, "favorites", options.ScreenName);
                     break;
 
                 case TweetSource.Lists:
