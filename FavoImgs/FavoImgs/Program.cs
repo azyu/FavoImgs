@@ -148,10 +148,12 @@ namespace FavoImgs
             switch (options.TweetSource)
             {
                 case TweetSource.Favorites:
+                    arguments.Add("screen_name", options.ScreenName);
                     tweets = tokens.Favorites.List(arguments);
                     break;
 
                 case TweetSource.Tweets:
+                    arguments.Add("screen_name", options.ScreenName);
                     tweets = tokens.Statuses.UserTimeline(arguments);
                     break;
 
@@ -224,7 +226,9 @@ namespace FavoImgs
             {
                 tokens = GetTwitterToken(consumerKey, consumerSecret, accessToken, accessTokenSecret);
                 myInfo = tokens.Account.VerifyCredentials();
-                options.ScreenName = myInfo.ScreenName;
+                
+                if(String.IsNullOrEmpty(options.ScreenName))
+                    options.ScreenName = myInfo.ScreenName;
             }
             catch (Exception ex)
             {
@@ -447,6 +451,11 @@ namespace FavoImgs
             if (!String.IsNullOrEmpty(options.DownloadPath))
             {
                 Settings.Current.DownloadPath = options.DownloadPath;
+            }
+
+            if (!String.IsNullOrEmpty(options.ScreenName))
+            {
+                Console.WriteLine(" [Option] ScreenName: {0}", options.ScreenName);
             }
 
             Console.WriteLine();

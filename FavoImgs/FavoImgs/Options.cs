@@ -32,6 +32,10 @@ namespace FavoImgs
         [ParserState]
         public IParserState ParserState { get; set; }
 
+        [Option("screen_name", Required = false,
+            HelpText = "The screen name of the user for whom to return results for")]
+        public string ScreenName { get; set; }
+
         [HelpOption('h', "help")]
         public string GetUsage()
         {
@@ -40,6 +44,5 @@ namespace FavoImgs
         }
 
         public TweetSource TweetSource { get; set; }
-        public string ScreenName { get; set; }
     }
 }
