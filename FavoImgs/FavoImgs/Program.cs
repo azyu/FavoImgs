@@ -153,11 +153,21 @@ namespace FavoImgs
                     break;
 
                 case TweetSource.Tweets:
+                    if (options.ExcludeRetweets)
+                    {
+                        arguments.Add("include_rts", "false");
+                    }
+
                     arguments.Add("screen_name", options.ScreenName);
                     tweets = tokens.Statuses.UserTimeline(arguments);
                     break;
 
                 case TweetSource.Lists:
+                    if (options.ExcludeRetweets)
+                    {
+                        arguments.Add("include_rts", "false");
+                    }
+
                     arguments.Add("slug", options.Slug);
                     arguments.Add("owner_screen_name", options.ScreenName);
                     tweets = tokens.Lists.Statuses(arguments);
@@ -446,6 +456,11 @@ namespace FavoImgs
             if (options.GetThemAll)
             {
                 Console.WriteLine(" [Option] Get them all!");
+            }
+
+            if (options.ExcludeRetweets)
+            {
+                Console.WriteLine(" [Option] Exclude retweets");
             }
 
             if (!String.IsNullOrEmpty(options.DownloadPath))

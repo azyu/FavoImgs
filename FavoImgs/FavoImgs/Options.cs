@@ -17,6 +17,10 @@ namespace FavoImgs
             HelpText = "Get them all!")]
         public bool GetThemAll { get; set; }
 
+        [Option("exclude_rts", Required = false,
+            HelpText = "Not contain native retweets")]
+        public bool ExcludeRetweets { get; set; }
+
         [Option("path", Required = false,
             HelpText = "Specify download folder")]
         public string DownloadPath { get; set; }
