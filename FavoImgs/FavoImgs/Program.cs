@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -62,7 +61,7 @@ namespace FavoImgs
         private static string ShowFolderBrowserDialog()
         {
             FolderBrowserDialog b = new FolderBrowserDialog();
-            b.Description = "Select folder to save...";
+            b.Description = Strings.SelectFolderToSave;
 
             if (b.ShowDialog() == DialogResult.OK)
                 return b.SelectedPath;
@@ -78,7 +77,7 @@ namespace FavoImgs
                 Settings.Current.DownloadPath = downloadPath;
             }
 
-            Console.WriteLine("[] Download Path: {0}\n", Settings.Current.DownloadPath);
+            Console.WriteLine(" [] {0}: {1}\n", Strings.DownloadPath, Settings.Current.DownloadPath);
         }
 
 
@@ -142,7 +141,7 @@ namespace FavoImgs
             CoreTweet.Core.ListedResponse<Status> tweets = null;
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine(" [] Get tweet(s) from Twitter...");
+            Console.WriteLine(" [] {0}", Strings.GetTweetsFromTwitter);
             Console.ResetColor();
 
             switch (options.TweetSource)
@@ -224,7 +223,7 @@ namespace FavoImgs
             }
             catch
             {
-                Console.WriteLine("Cannot read OAuth Token!");
+                Console.WriteLine("{0}", Strings.CannotReadOAuthToken);
                 Console.ReadLine();
                 return 1;
             }
@@ -259,7 +258,7 @@ namespace FavoImgs
                     Directory.CreateDirectory(options.DownloadPath);
                     if (!Directory.Exists(options.DownloadPath))
                     {
-                        Console.WriteLine("Cannot create download folder!");
+                        Console.WriteLine("{0}", Strings.CannotCreateDownloadFolder);
                         return 1;
                     }
 
@@ -309,7 +308,7 @@ namespace FavoImgs
                 catch (WebException ex)
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine(" [] {0}. Try again...", ex.Message);
+                    Console.WriteLine(" [] {0}. {1}", ex.Message, Strings.TryAgain);
                     Console.ResetColor();
 
                     continue;
@@ -320,7 +319,7 @@ namespace FavoImgs
                     if (ex.Status == (HttpStatusCode)429)
                     {
                         Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine(" [] API rate limit exceeded. Try again after 60 seconds...");
+                        Console.WriteLine(" [] {0}", Strings.APIRateLimitExceeded);
                         Console.ResetColor();
 
                         Thread.Sleep(60 * 1000);
@@ -374,7 +373,7 @@ namespace FavoImgs
                         if (TweetCache.IsImageTaken(downloadItems[j].TweetId, downloadItems[j].Uri.ToString()))
                         {
                             Console.ForegroundColor = ConsoleColor.DarkRed;
-                            Console.WriteLine(" - {0} (already downloaded. skip...)", downloadItems[j].Uri);
+                            Console.WriteLine(" - {0} ({1})", downloadItems[j].Uri, Strings.AlreadyDownloaded);
                             Console.ResetColor();
 
                             continue;
@@ -405,7 +404,7 @@ namespace FavoImgs
                     bRunning = false;
             }
 
-            Console.WriteLine("Work complete!");
+            Console.WriteLine("{0}", Strings.WorkComplete);
             Console.WriteLine();
 
             Console.WriteLine(" - Tweet(s): {0}", Statistics.Current.TweetCount);
@@ -420,6 +419,11 @@ namespace FavoImgs
         {
             options.TweetSource = TweetSource.Favorites;
 
+            if (!String.IsNullOrEmpty(options.ScreenName))
+            {
+                Console.WriteLine(" [Option] ScreenName: {0}", options.ScreenName);
+            }
+
             if (!String.IsNullOrEmpty(options.Source))
             {
                 var source = options.Source.ToLower();
@@ -429,7 +433,7 @@ namespace FavoImgs
 
                     if (String.IsNullOrEmpty(options.Slug))
                     {
-                        Console.WriteLine(" - Error: Missiong required option 'Slug'!");
+                        Console.WriteLine(" - Error: Missing required option 'Slug'!");
                         return false;
                     }
 
@@ -466,11 +470,6 @@ namespace FavoImgs
             if (!String.IsNullOrEmpty(options.DownloadPath))
             {
                 Settings.Current.DownloadPath = options.DownloadPath;
-            }
-
-            if (!String.IsNullOrEmpty(options.ScreenName))
-            {
-                Console.WriteLine(" [Option] ScreenName: {0}", options.ScreenName);
             }
 
             Console.WriteLine();
