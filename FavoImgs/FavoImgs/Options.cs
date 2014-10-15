@@ -5,17 +5,9 @@ namespace FavoImgs
 {
     class Options
     {
-        [Option('c', "continue", Required = false,
-            HelpText = "Continue download from the oldest favorite tweet.")]
-        public bool Continue { get; set; }
-
         [Option("reset_path", Required = false,
             HelpText = "Reset default download path.")]
         public bool ResetDownloadPath { get; set; }
-
-        [Option('a', "all", Required = false,
-            HelpText = "Get them all!")]
-        public bool GetThemAll { get; set; }
 
         [Option("exclude_rts", Required = false,
             HelpText = "Not contain native retweets")]

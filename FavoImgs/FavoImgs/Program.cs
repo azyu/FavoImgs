@@ -1,5 +1,6 @@
 ﻿using CoreTweet;
 using FavoImgs.Data;
+using FavoImgs.Resources;
 using FavoImgs.Security;
 using System;
 using System.Collections.Generic;
@@ -270,29 +271,17 @@ namespace FavoImgs
                 }
             }
 
+
+            const int TWEET_COUNT_PER_API = 200;
+
             long maxId = 0;
-            if (options.Continue)
-            {
-                try
-                {
-                    maxId = TweetCache.GetOldestId();
-                }
-                catch (Exception ex)
-                {
-                    WriteException(ex);
-                }
-            }
 
-            int left = 5;
-            if (options.GetThemAll)
-                left = Int32.MaxValue;
-
+            // 200 x 16 = 3200
+            int left = 16;
+            
             bool bRunning = true;
-
             while (bRunning)
             {
-                const int TWEET_COUNT_PER_API = 200;
-
                 Dictionary<string, object> arguments = new Dictionary<string, object>();
                 arguments.Add("count", TWEET_COUNT_PER_API);
                 if (maxId != 0)
@@ -444,22 +433,17 @@ namespace FavoImgs
                     options.TweetSource = TweetSource.Tweets;
                     Console.WriteLine(" [Option] Source: Tweets");
                 }
-            }
-
-            if (options.Continue)
-            {
-                Console.WriteLine(" [Option] Continue download from the oldest favorite tweet");
+                else
+                {
+                    options.TweetSource = TweetSource.Tweets;
+                    Console.WriteLine(" [Option] Source: Favorites");
+                }
             }
 
             if (options.ResetDownloadPath)
             {
                 Settings.Current.DownloadPath = String.Empty;
                 Console.WriteLine(" [Option] Reset default download path");
-            }
-
-            if (options.GetThemAll)
-            {
-                Console.WriteLine(" [Option] Get them all!");
             }
 
             if (options.ExcludeRetweets)
