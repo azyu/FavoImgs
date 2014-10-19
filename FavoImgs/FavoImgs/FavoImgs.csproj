@@ -78,6 +78,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConsoleHelper.cs" />
     <Compile Include="Data\Settings.cs" />
     <Compile Include="Data\TweetCache.cs" />
     <Compile Include="Data\XmlFile.cs" />
@@ -101,6 +102,7 @@
       <DependentUpon>Strings.resx</DependentUpon>
     </Compile>
     <Compile Include="TweetHelper.cs" />
+    <Compile Include="TwitterClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
