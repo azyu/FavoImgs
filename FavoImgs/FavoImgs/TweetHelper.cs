@@ -23,7 +23,7 @@ namespace FavoImgs
                         foreach (var eachVideoVariant in eachMedia.VideoInfo.Variants)
                         {
                             Uri uri = eachVideoVariant.Url;
-                            downloadItems.Add(new DownloadItem(twt.Id, uri, uri.Segments.Last()));
+                            downloadItems.Add(new DownloadItem(twt.Id, twt.User.ScreenName, uri, uri.Segments.Last()));
                         }
                     }
                 }
@@ -39,7 +39,7 @@ namespace FavoImgs
 
                     if (IsImageFile(uri.ToString()))
                     {
-                        downloadItems.Add(new DownloadItem(twt.Id, uri, uri.Segments.Last()));
+                        downloadItems.Add(new DownloadItem(twt.Id, twt.User.ScreenName, uri, uri.Segments.Last()));
                     }
                     else
                     {
@@ -54,7 +54,7 @@ namespace FavoImgs
                                 foreach (var eachUri in mediaUris)
                                 {
                                     string filename = eachUri.Segments.Last();
-                                    downloadItems.Add(new DownloadItem(twt.Id, eachUri, filename));
+                                    downloadItems.Add(new DownloadItem(twt.Id, twt.User.ScreenName, eachUri, filename));
                                 }
                             }
                             catch
@@ -77,7 +77,7 @@ namespace FavoImgs
 
                     Uri newUri = new Uri(ModifyImageUri(uri.ToString()));
 
-                    downloadItems.Add(new DownloadItem(twt.Id, newUri, uri.Segments.Last()));
+                    downloadItems.Add(new DownloadItem(twt.Id, twt.User.ScreenName, newUri, uri.Segments.Last()));
                 }
             }
         }
