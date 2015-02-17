@@ -9,15 +9,31 @@ namespace FavoImgs
     internal class TweetHelper
     {
         /// <summary>
-        /// 해당 트윗에 포함된 모든 이미지의 url을 찾아냄
+        /// 해당 트윗에 포함된 모든 이미지 / 동영상을 찾아냄
         /// </summary>
         public static void GetMediaUris(CoreTweet.Status twt, ref List<DownloadItem> downloadItems)
         {
+            // Twitter Video
+            if (twt.ExtendedEntities != null)
+            {
+                foreach (var eachMedia in twt.ExtendedEntities.Media)
+                {
+                    if (eachMedia.VideoInfo != null)
+                    {
+                        foreach (var eachVideoVariant in eachMedia.VideoInfo.Variants)
+                        {
+                            Uri uri = eachVideoVariant.Url;
+                            downloadItems.Add(new DownloadItem(twt.Id, uri, uri.Segments.Last()));
+                        }
+                    }
+                }
+            }
+
             if (twt.Entities.Urls != null)
             {
                 foreach (var url in twt.Entities.Urls)
                 {
-                    Uri uri = url.ExpandedUrl;
+                    Uri uri = new Uri(url.ExpandedUrl);
 
                     IMediaProvider mediaProvider = null;
 
