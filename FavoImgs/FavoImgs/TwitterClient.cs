@@ -10,6 +10,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using NLog;
 
 namespace FavoImgs
 {
@@ -23,6 +24,8 @@ namespace FavoImgs
 
     class TwitterClient
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+
         private string ShowTweet(CoreTweet.Status tweet)
         {
             return String.Format("{0} (@{1})  -- {2}\n{3}",
