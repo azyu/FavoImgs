@@ -12,8 +12,8 @@ namespace FavoImgs
         {
             var version = Assembly.GetEntryAssembly().GetName().Version;
 
-            Console.WriteLine("FavoImgs {0}, Copyright (c) 2014, Azyu (@_uyza_)", version);
-            Console.WriteLine("http://github.com/azyu/FavoImgs");
+            Console.WriteLine("FavoImgs {0}", version);
+            Console.WriteLine("by Azyu (@_uyza_)  http://github.com/azyu/FavoImgs");
             Console.WriteLine("============================================================");
         }
 
