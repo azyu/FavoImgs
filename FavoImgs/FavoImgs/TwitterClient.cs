@@ -263,6 +263,8 @@ namespace FavoImgs
                 try
                 {
                     tweets = GetTweets(tokens, options, arguments);
+                    Console.WriteLine(" [] {0}: {1}", Strings.NumberOfFetchedTweets, tweets.Count);
+                    logger.Info("{0}: {1}", Strings.NumberOfFetchedTweets, tweets.Count);
                 }
 
                 catch (WebException ex)
@@ -512,7 +514,7 @@ namespace FavoImgs
             catch (Exception ex)
             {
                 ConsoleHelper.WriteException(ex);
-                logger.WarnException(ex.Message, ex);
+                logger.InfoException(String.Format("{0} - {1}", ex.Message, uri.ToString()), ex);
 
                 if (File.Exists(tempFilePath))
                     File.Delete(tempFilePath);

@@ -124,6 +124,15 @@ namespace FavoImgs.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number of fetched tweet(s).
+        /// </summary>
+        internal static string NumberOfFetchedTweets {
+            get {
+                return ResourceManager.GetString("NumberOfFetchedTweets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reset saved download path..
         /// </summary>
         internal static string ResetDownloadPath {
