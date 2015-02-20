@@ -147,4 +147,7 @@
   <data name="WorkComplete" xml:space="preserve">
     <value>작업이 완료되었습니다.</value>
   </data>
+  <data name="NeedAuthentication" xml:space="preserve">
+    <value>인증이 필요합니다.</value>
+  </data>
 </root>

@@ -115,6 +115,15 @@ namespace FavoImgs.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Need authentication..
+        /// </summary>
+        internal static string NeedAuthentication {
+            get {
+                return ResourceManager.GetString("NeedAuthentication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reset saved download path..
         /// </summary>
         internal static string ResetDownloadPath {

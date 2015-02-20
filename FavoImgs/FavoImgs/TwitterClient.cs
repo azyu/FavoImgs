@@ -2,6 +2,7 @@
 using FavoImgs.Data;
 using FavoImgs.Resources;
 using FavoImgs.Security;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,7 +11,6 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-using NLog;
 
 namespace FavoImgs
 {
@@ -79,6 +79,9 @@ namespace FavoImgs
 
             if (String.IsNullOrEmpty(accessToken) || String.IsNullOrEmpty(accessTokenSecret))
             {
+                Console.WriteLine(Strings.NeedAuthentication);
+                logger.Info(Strings.NeedAuthentication);
+
                 var session = OAuth.Authorize(consumerKey, consumerSecret);
                 var url = session.AuthorizeUri;
                 Process.Start(url.ToString());
@@ -116,6 +119,7 @@ namespace FavoImgs
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine(" [] {0}", Strings.GetTweetsFromTwitter);
             Console.ResetColor();
+            logger.Info(Strings.GetTweetsFromTwitter);
 
             switch (options.TweetSource)
             {
@@ -151,6 +155,8 @@ namespace FavoImgs
 
         public int Run(string[] args)
         {
+            logger.Info("Arguments: {0}", String.Join(" ", args));
+
             var options = new Options();
 
             if (CommandLine.Parser.Default.ParseArguments(args, options))
@@ -178,8 +184,9 @@ namespace FavoImgs
                 if (!String.IsNullOrEmpty(accessTokenSecret))
                     accessTokenSecret = RijndaelEncryption.DecryptRijndael(accessTokenSecret);
             }
-            catch
+            catch(Exception ex)
             {
+                logger.ErrorException(Strings.CannotReadOAuthToken, ex);
                 Console.WriteLine("{0}", Strings.CannotReadOAuthToken);
                 Console.ReadLine();
                 return 1;
@@ -198,6 +205,7 @@ namespace FavoImgs
             }
             catch (Exception ex)
             {
+                logger.ErrorException(ex.Message, ex);
                 ConsoleHelper.WriteException(ex);
                 Console.ReadLine();
                 return 1;
@@ -222,6 +230,7 @@ namespace FavoImgs
                 }
                 catch (Exception ex)
                 {
+                    logger.ErrorException(ex.Message, ex);
                     ConsoleHelper.WriteException(ex);
                     return 1;
                 }
@@ -272,6 +281,7 @@ namespace FavoImgs
                     }
                     else
                     {
+                        logger.ErrorException(ex.Message, ex);
                         ConsoleHelper.WriteException(ex);
                         Console.ReadLine();
                         return 1;
@@ -279,6 +289,7 @@ namespace FavoImgs
                 }
                 catch (Exception ex)
                 {
+                    logger.ErrorException(ex.Message, ex);
                     ConsoleHelper.WriteException(ex);
                     Console.ReadLine();
                     return 1;

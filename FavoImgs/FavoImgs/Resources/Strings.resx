@@ -147,4 +147,7 @@
   <data name="ResetDownloadPath" xml:space="preserve">
     <value>Reset saved download path.</value>
   </data>
+  <data name="NeedAuthentication" xml:space="preserve">
+    <value>Need authentication.</value>
+  </data>
 </root>
