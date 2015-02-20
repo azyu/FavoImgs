@@ -14,6 +14,12 @@ using System.Windows.Forms;
 
 namespace FavoImgs
 {
+    enum GroupBy
+    {
+        None = 0,
+        ScreenName, // Default
+    };
+
     enum TweetSource
     {
         Invalid = 0,
@@ -305,10 +311,10 @@ namespace FavoImgs
                     string twtxt = ShowTweet(twt);
                     Console.WriteLine(twtxt);
 
-                    string finalPath = PathHelper.GetSubDirectoryName(options);
+                    string downloadRootPath = PathHelper.GetSubDirectoryName(options);
 
-                    if (!Directory.Exists(finalPath))
-                        Directory.CreateDirectory(finalPath);
+                    if (!Directory.Exists(downloadRootPath))
+                        Directory.CreateDirectory(downloadRootPath);
 
                     var downloadItems = new List<DownloadItem>();
 
@@ -336,7 +342,31 @@ namespace FavoImgs
                         }
 
                         string tempFilePath = Path.Combine(tempPath, downloadItems[j].FileName);
-                        string realFilePath = Path.Combine(finalPath, downloadItems[j].FileName);
+                        string targetFilePath = String.Empty;
+                        switch(options.GroupBy)
+                        {
+                            default:
+                            case GroupBy.None:
+                                targetFilePath = downloadItems[j].FileName;
+                                break;
+
+                            case GroupBy.ScreenName:
+                                if (options.TweetSource != TweetSource.Tweets)
+                                {
+                                    var upperFilePath = Path.Combine(downloadRootPath, twt.User.ScreenName);
+                                    if (!Directory.Exists(upperFilePath))
+                                        Directory.CreateDirectory(upperFilePath);
+
+                                    targetFilePath = Path.Combine(twt.User.ScreenName, downloadItems[j].FileName);
+                                }
+                                else
+                                {
+                                    targetFilePath = downloadItems[j].FileName;
+                                }
+                                break;
+                        }
+
+                        string realFilePath = Path.Combine(downloadRootPath, targetFilePath);
                         long tweetId = downloadItems[j].TweetId;
                         Uri uri = downloadItems[j].Uri;
 
@@ -373,11 +403,29 @@ namespace FavoImgs
 
         private static bool ApplyOptions(Options options)
         {
+            options.GroupBy = GroupBy.ScreenName;
             options.TweetSource = TweetSource.Favorites;
 
             if (!String.IsNullOrEmpty(options.ScreenName))
             {
                 Console.WriteLine(" [Option] ScreenName: {0}", options.ScreenName);
+            }
+
+            if (!String.IsNullOrEmpty(options.Group))
+            {
+                var source = options.Group.ToLower();
+
+                switch (source)
+                {
+                    case "none":
+                        options.GroupBy = GroupBy.None;
+                        break;
+
+                    default:
+                    case "screen_name":
+                        options.GroupBy = GroupBy.ScreenName;
+                        break;
+                }
             }
 
             if (!String.IsNullOrEmpty(options.Source))
@@ -389,7 +437,11 @@ namespace FavoImgs
 
                     if (String.IsNullOrEmpty(options.Slug))
                     {
-                        Console.WriteLine(" - Error: Missing required option 'Slug'!");
+                        const string msg = " - Error: Missing required option 'Slug'!";
+
+                        Console.WriteLine(msg);
+                        logger.Error(msg);
+
                         return false;
                     }
 
@@ -460,6 +512,8 @@ namespace FavoImgs
             catch (Exception ex)
             {
                 ConsoleHelper.WriteException(ex);
+                logger.WarnException(ex.Message, ex);
+
                 if (File.Exists(tempFilePath))
                     File.Delete(tempFilePath);
             }

@@ -21,6 +21,10 @@ namespace FavoImgs
             HelpText = "Specify source location")]
         public string Source { get; set; }
 
+        [Option("group", Required = false,
+            HelpText = "Group files")]
+        public string Group { get; set; }
+
         [Option("slug", Required = false,
             HelpText = "Identify a list by its slug")]
         public string Slug { get; set; }
@@ -40,5 +44,6 @@ namespace FavoImgs
         }
 
         public TweetSource TweetSource { get; set; }
+        public GroupBy GroupBy { get; set; }
     }
 }
