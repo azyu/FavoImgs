@@ -1,6 +1,8 @@
 ﻿using FavoImgs.Data;
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+[assembly: InternalsVisibleTo("UnitTest")]
 
 namespace FavoImgs
 {
