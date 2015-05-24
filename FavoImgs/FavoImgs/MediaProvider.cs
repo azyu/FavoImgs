@@ -118,6 +118,46 @@ namespace FavoImgs
         }
     }
 
+    class Vine : IMediaProvider
+    {
+        public List<Uri> GetUri(Uri uri)
+        {
+            List<Uri> retval = new List<Uri>();
+
+            string htmlCode = String.Empty;
+            try
+            {
+                var htmlwc = new WebClient();
+                htmlCode = htmlwc.DownloadString(uri);
+            }
+            catch
+            {
+                throw;
+            }
+
+            var doc = new HtmlAgilityPack.HtmlDocument();
+            doc.LoadHtml(htmlCode);
+
+            var nodes = doc.DocumentNode.SelectNodes("//html//head//meta[@property='twitter:player:stream']");
+            if (nodes == null)
+                return retval;
+
+            foreach (var link in nodes)
+            {
+                if (!link.Attributes.Any(x => x.Name == "content"))
+                    continue;
+
+                var attributes = link.Attributes.Where(x => x.Name == "content").ToList();
+                foreach (var att in attributes)
+                {
+                    retval.Add(new Uri(att.Value));
+                }
+            }
+
+            return retval;
+        }
+    }
+
     class Yfrog : IMediaProvider
     {
         public List<Uri> GetUri(Uri uri)

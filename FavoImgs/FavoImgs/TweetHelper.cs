@@ -113,6 +113,10 @@ namespace FavoImgs
             {
                 mediaProvider = new Twipple();
             }
+            else if (uri.ToString().Contains("vine.co"))
+            {
+                mediaProvider = new Vine();
+            }
 
             return mediaProvider;
         }

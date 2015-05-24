@@ -150,4 +150,7 @@
   <data name="NeedAuthentication" xml:space="preserve">
     <value>Need authentication.</value>
   </data>
+  <data name="NumberOfFetchedTweets" xml:space="preserve">
+    <value>Number of fetched tweet(s)</value>
+  </data>
 </root>

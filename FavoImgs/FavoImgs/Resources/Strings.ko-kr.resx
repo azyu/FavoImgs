@@ -150,4 +150,7 @@
   <data name="NeedAuthentication" xml:space="preserve">
     <value>인증이 필요합니다.</value>
   </data>
+  <data name="NumberOfFetchedTweets" xml:space="preserve">
+    <value>가져온 트윗 수</value>
+  </data>
 </root>
