@@ -122,9 +122,7 @@ namespace FavoImgs
         {
             CoreTweet.Core.ListedResponse<Status> tweets = null;
 
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine(" [] {0}", Strings.GetTweetsFromTwitter);
-            Console.ResetColor();
+            ConsoleHelper.WriteColoredLine(ConsoleColor.Yellow, " [] {0}", Strings.GetTweetsFromTwitter);
             logger.Info(Strings.GetTweetsFromTwitter);
 
             switch (options.TweetSource)
@@ -269,10 +267,7 @@ namespace FavoImgs
 
                 catch (WebException ex)
                 {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine(" [] {0}. {1}", ex.Message, Strings.TryAgain);
-                    Console.ResetColor();
-
+                    ConsoleHelper.WriteColoredLine(ConsoleColor.Yellow, " [] {0}. {1}", ex.Message, Strings.TryAgain);
                     continue;
                 }
                 catch (TwitterException ex)
@@ -280,10 +275,7 @@ namespace FavoImgs
                     // rate limit exceeded
                     if (ex.Status == (HttpStatusCode)429)
                     {
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine(" [] {0}", Strings.APIRateLimitExceeded);
-                        Console.ResetColor();
-
+                        ConsoleHelper.WriteColoredLine(ConsoleColor.Yellow, " [] {0}", Strings.APIRateLimitExceeded);
                         Thread.Sleep(60 * 1000);
                         continue;
                     }
@@ -336,10 +328,7 @@ namespace FavoImgs
                     {
                         if (TweetCache.IsImageTaken(downloadItems[j].TweetId, downloadItems[j].Uri.ToString()))
                         {
-                            Console.ForegroundColor = ConsoleColor.DarkRed;
-                            Console.WriteLine(" - {0} ({1})", downloadItems[j].Uri, Strings.AlreadyDownloaded);
-                            Console.ResetColor();
-
+                            ConsoleHelper.WriteColoredLine(ConsoleColor.DarkRed, " - {0} ({1})", downloadItems[j].Uri, Strings.AlreadyDownloaded);
                             continue;
                         }
 
@@ -379,12 +368,9 @@ namespace FavoImgs
                     Console.WriteLine();
                 }
 
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(" [] API: {0}/{1}, Reset: {2}\n",
-                    tweets.RateLimit.Remaining,
-                    tweets.RateLimit.Limit,
-                    tweets.RateLimit.Reset.LocalDateTime);
-                Console.ResetColor();
+                ConsoleHelper.WriteColoredLine(ConsoleColor.Yellow,
+                    " [] API: {0}/{1}, Reset: {2}\n",
+                    tweets.RateLimit.Remaining, tweets.RateLimit.Limit, tweets.RateLimit.Reset.LocalDateTime);
 
                 --left;
 
@@ -487,8 +473,7 @@ namespace FavoImgs
             {
                 WebClient wc = new WebClient();
 
-                Console.ForegroundColor = ConsoleColor.DarkCyan;
-                Console.WriteLine(" - {0}", uri);
+                ConsoleHelper.WriteColoredLine(ConsoleColor.DarkCyan, " - {0}", uri);
                 wc.DownloadFile(uri, tempFilePath);
 
                 // 확장자가 붙지 않았을 경우, Content-Type으로 추론
@@ -502,7 +487,6 @@ namespace FavoImgs
                     realFilePath = String.Format("{0}{1}", realFilePath, extension);
                 }
 
-                Console.ResetColor();
 
                 // 탐색기 섬네일 캐시 문제로 인하여 임시 폴더에서 파일을 받은 다음, 해당 폴더로 이동
                 File.Move(tempFilePath, realFilePath);

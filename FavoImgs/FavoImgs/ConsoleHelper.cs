@@ -7,11 +7,16 @@ namespace FavoImgs
 {
     public static class ConsoleHelper
     {
+        public static void WriteColoredLine(ConsoleColor color, String format, params object[] arg)
+        {
+            Console.ForegroundColor = color;
+            Console.WriteLine(format, arg);
+            Console.ResetColor();
+        }
+
         public static void WriteException(Exception ex)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine(" - {0}", ex.Message);
-            Console.ResetColor();
+            WriteColoredLine(ConsoleColor.Yellow, " - {0}", ex.Message);
         }
     }
 }
