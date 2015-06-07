@@ -302,70 +302,7 @@ namespace FavoImgs
                     else
                         maxId = Math.Min(maxId, twt.Id);
 
-                    string twtxt = ShowTweet(twt);
-                    Console.WriteLine(twtxt);
-
-                    string downloadRootPath = PathHelper.GetSubDirectoryName(options);
-
-                    if (!Directory.Exists(downloadRootPath))
-                        Directory.CreateDirectory(downloadRootPath);
-
-                    var downloadItems = new List<DownloadItem>();
-
-                    try
-                    {
-                        TweetHelper.GetMediaUris(twt, ref downloadItems);
-                    }
-                    catch (Exception ex)
-                    {
-                        ConsoleHelper.WriteException(ex);
-                    }
-
-                    var tempPath = Path.GetTempPath();
-
-                    Statistics.Current.DownloadCount += downloadItems.Count;
-                    for (int j = 0; j < downloadItems.Count; ++j)
-                    {
-                        if (TweetCache.IsImageTaken(downloadItems[j].TweetId, downloadItems[j].Uri.ToString()))
-                        {
-                            ConsoleHelper.WriteColoredLine(ConsoleColor.DarkRed, " - {0} ({1})", downloadItems[j].Uri, Strings.AlreadyDownloaded);
-                            continue;
-                        }
-
-                        string tempFilePath = Path.Combine(tempPath, downloadItems[j].FileName);
-                        string targetFilePath = String.Empty;
-                        switch(options.GroupBy)
-                        {
-                            default:
-                            case GroupBy.None:
-                                targetFilePath = downloadItems[j].FileName;
-                                break;
-
-                            case GroupBy.ScreenName:
-                                if (options.TweetSource != TweetSource.Tweets)
-                                {
-                                    var upperFilePath = Path.Combine(downloadRootPath, twt.User.ScreenName);
-                                    if (!Directory.Exists(upperFilePath))
-                                        Directory.CreateDirectory(upperFilePath);
-
-                                    targetFilePath = Path.Combine(twt.User.ScreenName, downloadItems[j].FileName);
-                                }
-                                else
-                                {
-                                    targetFilePath = downloadItems[j].FileName;
-                                }
-                                break;
-                        }
-
-                        string realFilePath = Path.Combine(downloadRootPath, targetFilePath);
-                        long tweetId = downloadItems[j].TweetId;
-                        Uri uri = downloadItems[j].Uri;
-
-                        DownloadFile(tempFilePath, realFilePath, tweetId, uri);
-                    }
-
-                    Statistics.Current.TweetCount += 1;
-                    Console.WriteLine();
+                    DownloadFilesFromTweet(options, twt);
                 }
 
                 ConsoleHelper.WriteColoredLine(ConsoleColor.Yellow,
@@ -387,6 +324,74 @@ namespace FavoImgs
 
             Settings.Current.Save();
             return 0;
+        }
+
+        private void DownloadFilesFromTweet(Options options, Status twt)
+        {
+            string twtxt = ShowTweet(twt);
+            Console.WriteLine(twtxt);
+
+            string downloadRootPath = PathHelper.GetSubDirectoryName(options);
+
+            if (!Directory.Exists(downloadRootPath))
+                Directory.CreateDirectory(downloadRootPath);
+
+            var downloadItems = new List<DownloadItem>();
+
+            try
+            {
+                TweetHelper.GetMediaUris(twt, ref downloadItems);
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelper.WriteException(ex);
+            }
+
+            var tempPath = Path.GetTempPath();
+
+            Statistics.Current.DownloadCount += downloadItems.Count;
+            for (int j = 0; j < downloadItems.Count; ++j)
+            {
+                if (TweetCache.IsImageTaken(downloadItems[j].TweetId, downloadItems[j].Uri.ToString()))
+                {
+                    ConsoleHelper.WriteColoredLine(ConsoleColor.DarkRed, " - {0} ({1})", downloadItems[j].Uri, Strings.AlreadyDownloaded);
+                    continue;
+                }
+
+                string tempFilePath = Path.Combine(tempPath, downloadItems[j].FileName);
+                string targetFilePath = String.Empty;
+                switch (options.GroupBy)
+                {
+                    default:
+                    case GroupBy.None:
+                        targetFilePath = downloadItems[j].FileName;
+                        break;
+
+                    case GroupBy.ScreenName:
+                        if (options.TweetSource != TweetSource.Tweets)
+                        {
+                            var upperFilePath = Path.Combine(downloadRootPath, twt.User.ScreenName);
+                            if (!Directory.Exists(upperFilePath))
+                                Directory.CreateDirectory(upperFilePath);
+
+                            targetFilePath = Path.Combine(twt.User.ScreenName, downloadItems[j].FileName);
+                        }
+                        else
+                        {
+                            targetFilePath = downloadItems[j].FileName;
+                        }
+                        break;
+                }
+
+                string realFilePath = Path.Combine(downloadRootPath, targetFilePath);
+                long tweetId = downloadItems[j].TweetId;
+                Uri uri = downloadItems[j].Uri;
+
+                DownloadFile(tempFilePath, realFilePath, tweetId, uri);
+            }
+
+            Statistics.Current.TweetCount += 1;
+            Console.WriteLine();
         }
 
         private static bool ApplyOptions(Options options)
