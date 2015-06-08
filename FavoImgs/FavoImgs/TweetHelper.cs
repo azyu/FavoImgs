@@ -39,7 +39,9 @@ namespace FavoImgs
 
                     if (IsImageFile(uri.ToString()))
                     {
-                        downloadItems.Add(new DownloadItem(twt.Id, twt.User.ScreenName, uri, uri.Segments.Last()));
+                        Uri newUri = new Uri(ModifyImageUri(uri.ToString()));
+
+                        downloadItems.Add(new DownloadItem(twt.Id, twt.User.ScreenName, newUri, uri.Segments.Last()));
                     }
                     else
                     {
