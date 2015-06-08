@@ -29,7 +29,7 @@ namespace FavoImgs
                 }
             }
 
-            if (twt.Entities.Media != null)
+            else if (twt.Entities.Media != null)
             {
                 foreach (var url in twt.Entities.Media)
                 {
