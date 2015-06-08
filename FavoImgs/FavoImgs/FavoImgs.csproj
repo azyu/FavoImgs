@@ -84,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConsoleHelper.cs" />
+    <Compile Include="CoreTweetResponse.cs" />
     <Compile Include="Data\Settings.cs" />
     <Compile Include="Data\TweetCache.cs" />
     <Compile Include="Data\XmlFile.cs" />
