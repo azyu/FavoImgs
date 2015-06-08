@@ -29,6 +29,43 @@ namespace FavoImgs
                 }
             }
 
+            if (twt.Entities.Media != null)
+            {
+                foreach (var url in twt.Entities.Media)
+                {
+                    Uri uri = url.MediaUrl;
+
+                    IMediaProvider mediaProvider = null;
+
+                    if (IsImageFile(uri.ToString()))
+                    {
+                        downloadItems.Add(new DownloadItem(twt.Id, twt.User.ScreenName, uri, uri.Segments.Last()));
+                    }
+                    else
+                    {
+                        mediaProvider = GetMediaProvider(uri);
+
+                        if (mediaProvider != null)
+                        {
+                            try
+                            {
+                                List<Uri> mediaUris = mediaProvider.GetUri(uri);
+
+                                foreach (var eachUri in mediaUris)
+                                {
+                                    string filename = eachUri.Segments.Last();
+                                    downloadItems.Add(new DownloadItem(twt.Id, twt.User.ScreenName, eachUri, filename));
+                                }
+                            }
+                            catch
+                            {
+                                throw;
+                            }
+                        }
+                    }
+                }
+            }
+
             if (twt.Entities.Urls != null)
             {
                 foreach (var url in twt.Entities.Urls)

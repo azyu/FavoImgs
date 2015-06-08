@@ -24,6 +24,21 @@ namespace FavoImgs
                 case TweetSource.Tweets:
                     retpath = Path.Combine(options.DownloadPath, "tweets", options.ScreenName);
                     break;
+
+                case TweetSource.Search:
+                    string[] optionStrings = options.Query.Split(' ');
+                    string dirname = String.Empty;
+                    foreach (var eachOption in optionStrings)
+                    {
+                        if(eachOption.IndexOf(":") == -1)
+                        {
+                            dirname = eachOption;
+                            break;
+                        }
+                    }
+
+                    retpath = Path.Combine(options.DownloadPath, "search", dirname);
+                    break;
             }
 
             /*

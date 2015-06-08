@@ -11,6 +11,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace FavoImgs
 {
@@ -26,6 +27,7 @@ namespace FavoImgs
         Tweets,
         Favorites,
         Lists,
+        Search,
     };
 
     class TwitterClient
@@ -117,10 +119,10 @@ namespace FavoImgs
             return tokens;
         }
 
-        private CoreTweet.Core.ListedResponse<Status> GetTweets(
+        private CoreTweetResponse GetResponse(
             Tokens tokens, Options options, Dictionary<string, object> arguments)
         {
-            CoreTweet.Core.ListedResponse<Status> tweets = null;
+            CoreTweetResponse response = new CoreTweetResponse();
 
             ConsoleHelper.WriteColoredLine(ConsoleColor.Yellow, " [] {0}", Strings.GetTweetsFromTwitter);
             logger.Info(Strings.GetTweetsFromTwitter);
@@ -128,21 +130,30 @@ namespace FavoImgs
             switch (options.TweetSource)
             {
                 case TweetSource.Favorites:
+                {
                     arguments.Add("screen_name", options.ScreenName);
-                    tweets = tokens.Favorites.List(arguments);
-                    break;
+                    var result = tokens.Favorites.List(arguments);
+                    response.Tweets = result.ToList();
+                    response.RateLimit = result.RateLimit;
+                }
+                break;
 
                 case TweetSource.Tweets:
+                {
                     if (options.ExcludeRetweets)
                     {
                         arguments.Add("include_rts", "false");
                     }
 
                     arguments.Add("screen_name", options.ScreenName);
-                    tweets = tokens.Statuses.UserTimeline(arguments);
-                    break;
+                    var result = tokens.Statuses.UserTimeline(arguments);
+                    response.Tweets = result.ToList();
+                    response.RateLimit = result.RateLimit;
+                }
+                break;
 
                 case TweetSource.Lists:
+                {
                     if (options.ExcludeRetweets)
                     {
                         arguments.Add("include_rts", "false");
@@ -150,11 +161,23 @@ namespace FavoImgs
 
                     arguments.Add("slug", options.Slug);
                     arguments.Add("owner_screen_name", options.ScreenName);
-                    tweets = tokens.Lists.Statuses(arguments);
-                    break;
+                    var result = tokens.Lists.Statuses(arguments);
+                    response.Tweets = result.ToList();
+                    response.RateLimit = result.RateLimit;
+                }
+                break;
+
+                case TweetSource.Search:
+                {
+                    arguments.Add("q", options.Query);
+                    var result = tokens.Search.Tweets(arguments);
+                    response.Tweets = result.ToList();
+                    response.RateLimit = result.RateLimit;
+                }
+                break;
             }
 
-            return tweets;
+            return response;
         }
 
         public int Run(string[] args)
@@ -256,13 +279,13 @@ namespace FavoImgs
                 if (maxId != 0)
                     arguments.Add("max_id", maxId - 1);
 
-                CoreTweet.Core.ListedResponse<Status> tweets = null;
+                CoreTweetResponse response = null;
 
                 try
                 {
-                    tweets = GetTweets(tokens, options, arguments);
-                    Console.WriteLine(" [] {0}: {1}", Strings.NumberOfFetchedTweets, tweets.Count);
-                    logger.Info("{0}: {1}", Strings.NumberOfFetchedTweets, tweets.Count);
+                    response = GetResponse(tokens, options, arguments);
+                    Console.WriteLine(" [] {0}: {1}", Strings.NumberOfFetchedTweets, response.Tweets.Count);
+                    logger.Info("{0}: {1}", Strings.NumberOfFetchedTweets, response.Tweets.Count);
                 }
 
                 catch (WebException ex)
@@ -295,23 +318,25 @@ namespace FavoImgs
                     return 1;
                 }
 
-                foreach (var twt in tweets)
+                foreach (var twt in response.Tweets)
                 {
+                    DownloadFilesFromTweet(options, twt);
+
                     if (maxId == 0)
                         maxId = twt.Id;
                     else
                         maxId = Math.Min(maxId, twt.Id);
 
-                    DownloadFilesFromTweet(options, twt);
+                    Statistics.Current.TweetCount += 1;
                 }
 
                 ConsoleHelper.WriteColoredLine(ConsoleColor.Yellow,
                     " [] API: {0}/{1}, Reset: {2}\n",
-                    tweets.RateLimit.Remaining, tweets.RateLimit.Limit, tweets.RateLimit.Reset.LocalDateTime);
+                    response.RateLimit.Remaining, response.RateLimit.Limit, response.RateLimit.Reset.LocalDateTime);
 
                 --left;
 
-                if (left == 0 || tweets.Count == 0)
+                if (left == 0 || response.Tweets.Count == 0)
                     bRunning = false;
             }
 
@@ -390,7 +415,6 @@ namespace FavoImgs
                 DownloadFile(tempFilePath, realFilePath, tweetId, uri);
             }
 
-            Statistics.Current.TweetCount += 1;
             Console.WriteLine();
         }
 
@@ -444,6 +468,22 @@ namespace FavoImgs
                 {
                     options.TweetSource = TweetSource.Tweets;
                     Console.WriteLine(" [Option] Source: Tweets");
+                }
+                else if (source == "search")
+                {
+                    options.TweetSource = TweetSource.Search;
+
+                    if (String.IsNullOrEmpty(options.Query))
+                    {
+                        const string msg = " - Error: Missing required option 'query'!";
+
+                        Console.WriteLine(msg);
+                        logger.Error(msg);
+
+                        return false;
+                    }
+
+                    Console.WriteLine(" [Option] Source: Search");
                 }
                 else
                 {
