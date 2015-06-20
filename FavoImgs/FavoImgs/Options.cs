@@ -29,9 +29,15 @@ namespace FavoImgs
             HelpText = "Identify a list by its slug")]
         public string Slug { get; set; }
 
-        [Option("query", Required = false,
+        [Option("hashtag", Required = false,
+            HelpText = "Search hashtag")]
+        public string Hashtag { get; set; }
+
+        /*
+          [Option("query", Required = false,
             HelpText = "Search query")]
         public string Query { get; set; }
+         */
 
         [ParserState]
         public IParserState ParserState { get; set; }

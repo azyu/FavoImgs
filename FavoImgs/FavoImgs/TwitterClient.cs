@@ -7,11 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-using System.Linq;
 
 namespace FavoImgs
 {
@@ -27,7 +27,8 @@ namespace FavoImgs
         Tweets,
         Favorites,
         Lists,
-        Search,
+        Hashtag,
+        // Search,
     };
 
     class TwitterClient
@@ -130,43 +131,54 @@ namespace FavoImgs
             switch (options.TweetSource)
             {
                 case TweetSource.Favorites:
-                {
-                    arguments.Add("screen_name", options.ScreenName);
-                    var result = tokens.Favorites.List(arguments);
-                    response.Tweets = result.ToList();
-                    response.RateLimit = result.RateLimit;
-                }
-                break;
+                    {
+                        arguments.Add("screen_name", options.ScreenName);
+                        var result = tokens.Favorites.List(arguments);
+                        response.Tweets = result.ToList();
+                        response.RateLimit = result.RateLimit;
+                    }
+                    break;
 
                 case TweetSource.Tweets:
-                {
-                    if (options.ExcludeRetweets)
                     {
-                        arguments.Add("include_rts", "false");
-                    }
+                        if (options.ExcludeRetweets)
+                        {
+                            arguments.Add("include_rts", "false");
+                        }
 
-                    arguments.Add("screen_name", options.ScreenName);
-                    var result = tokens.Statuses.UserTimeline(arguments);
-                    response.Tweets = result.ToList();
-                    response.RateLimit = result.RateLimit;
-                }
-                break;
+                        arguments.Add("screen_name", options.ScreenName);
+                        var result = tokens.Statuses.UserTimeline(arguments);
+                        response.Tweets = result.ToList();
+                        response.RateLimit = result.RateLimit;
+                    }
+                    break;
 
                 case TweetSource.Lists:
-                {
-                    if (options.ExcludeRetweets)
                     {
-                        arguments.Add("include_rts", "false");
+                        if (options.ExcludeRetweets)
+                        {
+                            arguments.Add("include_rts", "false");
+                        }
+
+                        arguments.Add("slug", options.Slug);
+                        arguments.Add("owner_screen_name", options.ScreenName);
+                        var result = tokens.Lists.Statuses(arguments);
+                        response.Tweets = result.ToList();
+                        response.RateLimit = result.RateLimit;
+                    }
+                    break;
+
+
+                case TweetSource.Hashtag:
+                    {
+                        String query = String.Format("{0} filter:images -filter:retweets", options.Hashtag);
+                        arguments.Add("q", query);
+                        var result = tokens.Search.Tweets(arguments);
+                        response.Tweets = result.ToList();
+                        response.RateLimit = result.RateLimit;
                     }
 
-                    arguments.Add("slug", options.Slug);
-                    arguments.Add("owner_screen_name", options.ScreenName);
-                    var result = tokens.Lists.Statuses(arguments);
-                    response.Tweets = result.ToList();
-                    response.RateLimit = result.RateLimit;
-                }
-                break;
-
+                    /*
                 case TweetSource.Search:
                 {
                     arguments.Add("q", options.Query);
@@ -174,7 +186,8 @@ namespace FavoImgs
                     response.Tweets = result.ToList();
                     response.RateLimit = result.RateLimit;
                 }
-                break;
+                     * */
+                    break;
             }
 
             return response;
@@ -211,7 +224,7 @@ namespace FavoImgs
                 if (!String.IsNullOrEmpty(accessTokenSecret))
                     accessTokenSecret = RijndaelEncryption.DecryptRijndael(accessTokenSecret);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.ErrorException(Strings.CannotReadOAuthToken, ex);
                 Console.WriteLine("{0}", Strings.CannotReadOAuthToken);
@@ -469,6 +482,43 @@ namespace FavoImgs
                     options.TweetSource = TweetSource.Tweets;
                     Console.WriteLine(" [Option] Source: Tweets");
                 }
+                else if (source == "hashtag")
+                {
+                    options.TweetSource = TweetSource.Hashtag;
+
+                    if (String.IsNullOrEmpty(options.Hashtag))
+                    {
+                        string msg = String.Format(" - Error: {0}", Strings.HashtagMissing);
+
+                        Console.WriteLine(msg);
+                        logger.Error(msg);
+
+                        return false;
+                    }
+
+                    if (options.Hashtag[0] != '#')
+                    {
+                        string msg = String.Format(" - Error: {0}", Strings.HashtagNotBeginsWithSharp);
+
+                        Console.WriteLine(msg);
+                        logger.Error(msg);
+
+                        return false;
+                    }
+
+                    if (options.Hashtag.Contains(" "))
+                    {
+                        string msg = String.Format(" - Error: {0}", Strings.HashtagInvalid);
+
+                        Console.WriteLine(msg);
+                        logger.Error(msg);
+
+                        return false;
+                    }
+
+                    Console.WriteLine(" [Option] Source: Hashtag ({0})", options.Hashtag);
+                }
+                /*
                 else if (source == "search")
                 {
                     options.TweetSource = TweetSource.Search;
@@ -485,6 +535,7 @@ namespace FavoImgs
 
                     Console.WriteLine(" [Option] Source: Search");
                 }
+                */
                 else
                 {
                     options.TweetSource = TweetSource.Tweets;

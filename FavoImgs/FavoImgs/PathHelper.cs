@@ -25,6 +25,11 @@ namespace FavoImgs
                     retpath = Path.Combine(options.DownloadPath, "tweets", options.ScreenName);
                     break;
 
+                case TweetSource.Hashtag:
+                    retpath = Path.Combine(options.DownloadPath, "hashtags", options.Hashtag);
+                    break;
+
+                /*
                 case TweetSource.Search:
                     string dirname = String.Empty;
 
@@ -34,33 +39,8 @@ namespace FavoImgs
 
                     retpath = Path.Combine(options.DownloadPath, "search", dirname);
                     break;
+                 */
             }
-
-            /*
-            switch (convention)
-            {
-                default:
-                case DirectoryNamingConvention.None:
-                    retpath = options.DownloadPath;
-                    break;
-
-                case DirectoryNamingConvention.Date:
-                    retpath = Path.Combine(options.DownloadPath, createdAt.LocalDateTime.ToString("yyyyMM"));
-                    break;
-
-                case DirectoryNamingConvention.ScreenName:
-                    retpath = Path.Combine(options.DownloadPath, screenName);
-                    break;
-
-                case DirectoryNamingConvention.Date_ScreenName:
-                    retpath = Path.Combine(options.DownloadPath, createdAt.LocalDateTime.ToString("yyyyMM"), screenName);
-                    break;
-
-                case DirectoryNamingConvention.ScreenName_Date:
-                    retpath = Path.Combine(options.DownloadPath, screenName, createdAt.LocalDateTime.ToString("yyyyMM"));
-                    break;
-            }
-            */
 
             return retpath;
         }
