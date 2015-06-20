@@ -153,4 +153,13 @@
   <data name="NumberOfFetchedTweets" xml:space="preserve">
     <value>가져온 트윗 수</value>
   </data>
+  <data name="HashtagInvalid" xml:space="preserve">
+    <value>올바르지 않은 해쉬태그입니다.</value>
+  </data>
+  <data name="HashtagMissing" xml:space="preserve">
+    <value>해쉬태그가 설정되지 않았습니다.</value>
+  </data>
+  <data name="HashtagNotBeginsWithSharp" xml:space="preserve">
+    <value>첫 번째 문자가 #이 아닙니다.</value>
+  </data>
 </root>

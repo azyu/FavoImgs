@@ -153,4 +153,13 @@
   <data name="NumberOfFetchedTweets" xml:space="preserve">
     <value>Number of fetched tweet(s)</value>
   </data>
+  <data name="HashtagInvalid" xml:space="preserve">
+    <value>Invalid hashtag!</value>
+  </data>
+  <data name="HashtagMissing" xml:space="preserve">
+    <value>Missing required option 'hashtag'!</value>
+  </data>
+  <data name="HashtagNotBeginsWithSharp" xml:space="preserve">
+    <value>Not begins with sharp!</value>
+  </data>
 </root>
