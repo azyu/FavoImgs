@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -26,6 +27,8 @@ namespace FavoImgs
         Tweets,
         Favorites,
         Lists,
+        Hashtag,
+        // Search,
     };
 
     class TwitterClient
@@ -117,10 +120,10 @@ namespace FavoImgs
             return tokens;
         }
 
-        private CoreTweet.Core.ListedResponse<Status> GetTweets(
+        private CoreTweetResponse GetResponse(
             Tokens tokens, Options options, Dictionary<string, object> arguments)
         {
-            CoreTweet.Core.ListedResponse<Status> tweets = null;
+            CoreTweetResponse response = new CoreTweetResponse();
 
             ConsoleHelper.WriteColoredLine(ConsoleColor.Yellow, " [] {0}", Strings.GetTweetsFromTwitter);
             logger.Info(Strings.GetTweetsFromTwitter);
@@ -128,33 +131,66 @@ namespace FavoImgs
             switch (options.TweetSource)
             {
                 case TweetSource.Favorites:
-                    arguments.Add("screen_name", options.ScreenName);
-                    tweets = tokens.Favorites.List(arguments);
+                    {
+                        arguments.Add("screen_name", options.ScreenName);
+                        var result = tokens.Favorites.List(arguments);
+                        response.Tweets = result.ToList();
+                        response.RateLimit = result.RateLimit;
+                    }
                     break;
 
                 case TweetSource.Tweets:
-                    if (options.ExcludeRetweets)
                     {
-                        arguments.Add("include_rts", "false");
-                    }
+                        if (options.ExcludeRetweets)
+                        {
+                            arguments.Add("include_rts", "false");
+                        }
 
-                    arguments.Add("screen_name", options.ScreenName);
-                    tweets = tokens.Statuses.UserTimeline(arguments);
+                        arguments.Add("screen_name", options.ScreenName);
+                        var result = tokens.Statuses.UserTimeline(arguments);
+                        response.Tweets = result.ToList();
+                        response.RateLimit = result.RateLimit;
+                    }
                     break;
 
                 case TweetSource.Lists:
-                    if (options.ExcludeRetweets)
                     {
-                        arguments.Add("include_rts", "false");
+                        if (options.ExcludeRetweets)
+                        {
+                            arguments.Add("include_rts", "false");
+                        }
+
+                        arguments.Add("slug", options.Slug);
+                        arguments.Add("owner_screen_name", options.ScreenName);
+                        var result = tokens.Lists.Statuses(arguments);
+                        response.Tweets = result.ToList();
+                        response.RateLimit = result.RateLimit;
+                    }
+                    break;
+
+
+                case TweetSource.Hashtag:
+                    {
+                        String query = String.Format("{0} filter:images -filter:retweets", options.Hashtag);
+                        arguments.Add("q", query);
+                        var result = tokens.Search.Tweets(arguments);
+                        response.Tweets = result.ToList();
+                        response.RateLimit = result.RateLimit;
                     }
 
-                    arguments.Add("slug", options.Slug);
-                    arguments.Add("owner_screen_name", options.ScreenName);
-                    tweets = tokens.Lists.Statuses(arguments);
+                    /*
+                case TweetSource.Search:
+                {
+                    arguments.Add("q", options.Query);
+                    var result = tokens.Search.Tweets(arguments);
+                    response.Tweets = result.ToList();
+                    response.RateLimit = result.RateLimit;
+                }
+                     * */
                     break;
             }
 
-            return tweets;
+            return response;
         }
 
         public int Run(string[] args)
@@ -188,7 +224,7 @@ namespace FavoImgs
                 if (!String.IsNullOrEmpty(accessTokenSecret))
                     accessTokenSecret = RijndaelEncryption.DecryptRijndael(accessTokenSecret);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.ErrorException(Strings.CannotReadOAuthToken, ex);
                 Console.WriteLine("{0}", Strings.CannotReadOAuthToken);
@@ -256,13 +292,13 @@ namespace FavoImgs
                 if (maxId != 0)
                     arguments.Add("max_id", maxId - 1);
 
-                CoreTweet.Core.ListedResponse<Status> tweets = null;
+                CoreTweetResponse response = null;
 
                 try
                 {
-                    tweets = GetTweets(tokens, options, arguments);
-                    Console.WriteLine(" [] {0}: {1}", Strings.NumberOfFetchedTweets, tweets.Count);
-                    logger.Info("{0}: {1}", Strings.NumberOfFetchedTweets, tweets.Count);
+                    response = GetResponse(tokens, options, arguments);
+                    Console.WriteLine(" [] {0}: {1}", Strings.NumberOfFetchedTweets, response.Tweets.Count);
+                    logger.Info("{0}: {1}", Strings.NumberOfFetchedTweets, response.Tweets.Count);
                 }
 
                 catch (WebException ex)
@@ -295,86 +331,25 @@ namespace FavoImgs
                     return 1;
                 }
 
-                foreach (var twt in tweets)
+                foreach (var twt in response.Tweets)
                 {
+                    DownloadFilesFromTweet(options, twt);
+
                     if (maxId == 0)
                         maxId = twt.Id;
                     else
                         maxId = Math.Min(maxId, twt.Id);
 
-                    string twtxt = ShowTweet(twt);
-                    Console.WriteLine(twtxt);
-
-                    string downloadRootPath = PathHelper.GetSubDirectoryName(options);
-
-                    if (!Directory.Exists(downloadRootPath))
-                        Directory.CreateDirectory(downloadRootPath);
-
-                    var downloadItems = new List<DownloadItem>();
-
-                    try
-                    {
-                        TweetHelper.GetMediaUris(twt, ref downloadItems);
-                    }
-                    catch (Exception ex)
-                    {
-                        ConsoleHelper.WriteException(ex);
-                    }
-
-                    var tempPath = Path.GetTempPath();
-
-                    Statistics.Current.DownloadCount += downloadItems.Count;
-                    for (int j = 0; j < downloadItems.Count; ++j)
-                    {
-                        if (TweetCache.IsImageTaken(downloadItems[j].TweetId, downloadItems[j].Uri.ToString()))
-                        {
-                            ConsoleHelper.WriteColoredLine(ConsoleColor.DarkRed, " - {0} ({1})", downloadItems[j].Uri, Strings.AlreadyDownloaded);
-                            continue;
-                        }
-
-                        string tempFilePath = Path.Combine(tempPath, downloadItems[j].FileName);
-                        string targetFilePath = String.Empty;
-                        switch(options.GroupBy)
-                        {
-                            default:
-                            case GroupBy.None:
-                                targetFilePath = downloadItems[j].FileName;
-                                break;
-
-                            case GroupBy.ScreenName:
-                                if (options.TweetSource != TweetSource.Tweets)
-                                {
-                                    var upperFilePath = Path.Combine(downloadRootPath, twt.User.ScreenName);
-                                    if (!Directory.Exists(upperFilePath))
-                                        Directory.CreateDirectory(upperFilePath);
-
-                                    targetFilePath = Path.Combine(twt.User.ScreenName, downloadItems[j].FileName);
-                                }
-                                else
-                                {
-                                    targetFilePath = downloadItems[j].FileName;
-                                }
-                                break;
-                        }
-
-                        string realFilePath = Path.Combine(downloadRootPath, targetFilePath);
-                        long tweetId = downloadItems[j].TweetId;
-                        Uri uri = downloadItems[j].Uri;
-
-                        DownloadFile(tempFilePath, realFilePath, tweetId, uri);
-                    }
-
                     Statistics.Current.TweetCount += 1;
-                    Console.WriteLine();
                 }
 
                 ConsoleHelper.WriteColoredLine(ConsoleColor.Yellow,
                     " [] API: {0}/{1}, Reset: {2}\n",
-                    tweets.RateLimit.Remaining, tweets.RateLimit.Limit, tweets.RateLimit.Reset.LocalDateTime);
+                    response.RateLimit.Remaining, response.RateLimit.Limit, response.RateLimit.Reset.LocalDateTime);
 
                 --left;
 
-                if (left == 0 || tweets.Count == 0)
+                if (left == 0 || response.Tweets.Count == 0)
                     bRunning = false;
             }
 
@@ -387,6 +362,73 @@ namespace FavoImgs
 
             Settings.Current.Save();
             return 0;
+        }
+
+        private void DownloadFilesFromTweet(Options options, Status twt)
+        {
+            string twtxt = ShowTweet(twt);
+            Console.WriteLine(twtxt);
+
+            string downloadRootPath = PathHelper.GetSubDirectoryName(options);
+
+            if (!Directory.Exists(downloadRootPath))
+                Directory.CreateDirectory(downloadRootPath);
+
+            var downloadItems = new List<DownloadItem>();
+
+            try
+            {
+                TweetHelper.GetMediaUris(twt, ref downloadItems);
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelper.WriteException(ex);
+            }
+
+            var tempPath = Path.GetTempPath();
+
+            Statistics.Current.DownloadCount += downloadItems.Count;
+            for (int j = 0; j < downloadItems.Count; ++j)
+            {
+                if (TweetCache.IsImageTaken(downloadItems[j].TweetId, downloadItems[j].Uri.ToString()))
+                {
+                    ConsoleHelper.WriteColoredLine(ConsoleColor.DarkRed, " - {0} ({1})", downloadItems[j].Uri, Strings.AlreadyDownloaded);
+                    continue;
+                }
+
+                string tempFilePath = Path.Combine(tempPath, downloadItems[j].FileName);
+                string targetFilePath = String.Empty;
+                switch (options.GroupBy)
+                {
+                    default:
+                    case GroupBy.None:
+                        targetFilePath = downloadItems[j].FileName;
+                        break;
+
+                    case GroupBy.ScreenName:
+                        if (options.TweetSource != TweetSource.Tweets)
+                        {
+                            var upperFilePath = Path.Combine(downloadRootPath, twt.User.ScreenName);
+                            if (!Directory.Exists(upperFilePath))
+                                Directory.CreateDirectory(upperFilePath);
+
+                            targetFilePath = Path.Combine(twt.User.ScreenName, downloadItems[j].FileName);
+                        }
+                        else
+                        {
+                            targetFilePath = downloadItems[j].FileName;
+                        }
+                        break;
+                }
+
+                string realFilePath = Path.Combine(downloadRootPath, targetFilePath);
+                long tweetId = downloadItems[j].TweetId;
+                Uri uri = downloadItems[j].Uri;
+
+                DownloadFile(tempFilePath, realFilePath, tweetId, uri);
+            }
+
+            Console.WriteLine();
         }
 
         private static bool ApplyOptions(Options options)
@@ -440,6 +482,60 @@ namespace FavoImgs
                     options.TweetSource = TweetSource.Tweets;
                     Console.WriteLine(" [Option] Source: Tweets");
                 }
+                else if (source == "hashtag")
+                {
+                    options.TweetSource = TweetSource.Hashtag;
+
+                    if (String.IsNullOrEmpty(options.Hashtag))
+                    {
+                        string msg = String.Format(" - Error: {0}", Strings.HashtagMissing);
+
+                        Console.WriteLine(msg);
+                        logger.Error(msg);
+
+                        return false;
+                    }
+
+                    if (options.Hashtag[0] != '#')
+                    {
+                        string msg = String.Format(" - Error: {0}", Strings.HashtagNotBeginsWithSharp);
+
+                        Console.WriteLine(msg);
+                        logger.Error(msg);
+
+                        return false;
+                    }
+
+                    if (options.Hashtag.Contains(" "))
+                    {
+                        string msg = String.Format(" - Error: {0}", Strings.HashtagInvalid);
+
+                        Console.WriteLine(msg);
+                        logger.Error(msg);
+
+                        return false;
+                    }
+
+                    Console.WriteLine(" [Option] Source: Hashtag ({0})", options.Hashtag);
+                }
+                /*
+                else if (source == "search")
+                {
+                    options.TweetSource = TweetSource.Search;
+
+                    if (String.IsNullOrEmpty(options.Query))
+                    {
+                        const string msg = " - Error: Missing required option 'query'!";
+
+                        Console.WriteLine(msg);
+                        logger.Error(msg);
+
+                        return false;
+                    }
+
+                    Console.WriteLine(" [Option] Source: Search");
+                }
+                */
                 else
                 {
                     options.TweetSource = TweetSource.Tweets;
