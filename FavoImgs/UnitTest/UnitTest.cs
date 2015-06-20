@@ -55,6 +55,19 @@ namespace FavoImgs
         }
 
         [TestMethod]
+        public void PathHelper_HashtagTest()
+        {
+            Options options = new Options();
+
+            options.DownloadPath = @"D:\Download";
+            options.TweetSource = TweetSource.Hashtag;
+            options.Hashtag = "#東條希生誕祭2015";
+            string actual = PathHelper.GetSubDirectoryName(options);
+
+            Assert.AreEqual(@"D:\Download\hashtags\#東條希生誕祭2015", actual);
+        }
+
+        [TestMethod]
         public void MediaProvider_TwippleTest()
         {
             Uri uri = new Uri("http://p.twipple.jp/2d1sn");
