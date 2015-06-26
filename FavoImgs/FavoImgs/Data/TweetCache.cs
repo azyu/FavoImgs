@@ -1,7 +1,16 @@
 ﻿using System;
-using System.Data.SQLite;
 using System.IO;
 using System.Windows.Forms;
+
+#if MONO
+using Mono.Data.Sqlite;
+using SqlCon = Mono.Data.Sqlite.SqliteConnection;
+using SqlCmd = Mono.Data.Sqlite.SqliteCommand;
+#else
+using System.Data.SQLite;
+using SqlCon = System.Data.SQLite.SQLiteConnection;
+using SqlCmd = System.Data.SQLite.SQLiteCommand;
+#endif
 
 namespace FavoImgs.Data
 {
@@ -20,13 +29,13 @@ namespace FavoImgs.Data
             try
             {
                 if (!File.Exists(cachePath))
-                    SQLiteConnection.CreateFile(cachePath);
+                    SqlCon.CreateFile(cachePath);
 
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SQLiteConnection conn = new SQLiteConnection(connstr);
+                SqlCon conn = new SqlCon(connstr);
                 conn.Open();
 
-                SQLiteCommand cmd = new SQLiteCommand(conn);
+                SqlCmd cmd = new SqlCmd(conn);
 
                 string query = String.Empty;
 
@@ -53,10 +62,10 @@ namespace FavoImgs.Data
             try
             {
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SQLiteConnection conn = new SQLiteConnection(connstr);
+                SqlCon conn = new SqlCon(connstr);
                 conn.Open();
 
-                SQLiteCommand cmd = new SQLiteCommand(conn);
+                SqlCmd cmd = new SqlCmd(conn);
 
                 string query = String.Empty;
 
@@ -78,10 +87,10 @@ namespace FavoImgs.Data
             try
             {
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SQLiteConnection conn = new SQLiteConnection(connstr);
+                SqlCon conn = new SqlCon(connstr);
                 conn.Open();
 
-                SQLiteCommand cmd = new SQLiteCommand(conn);
+                SqlCmd cmd = new SqlCmd(conn);
 
                 string query = String.Empty;
 
@@ -102,10 +111,10 @@ namespace FavoImgs.Data
             try
             {
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SQLiteConnection conn = new SQLiteConnection(connstr);
+                SqlCon conn = new SqlCon(connstr);
                 conn.Open();
 
-                SQLiteCommand cmd = new SQLiteCommand(conn);
+                SqlCmd cmd = new SqlCmd(conn);
 
                 string query = String.Empty;
 
@@ -126,10 +135,10 @@ namespace FavoImgs.Data
             try
             {
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SQLiteConnection conn = new SQLiteConnection(connstr);
+                SqlCon conn = new SqlCon(connstr);
                 conn.Open();
 
-                SQLiteCommand cmd = new SQLiteCommand(conn);
+                SqlCmd cmd = new SqlCmd(conn);
 
                 string query = String.Empty;
 
@@ -152,10 +161,10 @@ namespace FavoImgs.Data
             try
             {
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SQLiteConnection conn = new SQLiteConnection(connstr);
+                SqlCon conn = new SqlCon(connstr);
                 conn.Open();
 
-                SQLiteCommand cmd = new SQLiteCommand(conn);
+                SqlCmd cmd = new SqlCmd(conn);
 
                 string query = String.Empty;
 
@@ -176,10 +185,10 @@ namespace FavoImgs.Data
             try
             {
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SQLiteConnection conn = new SQLiteConnection(connstr);
+                SqlCon conn = new SqlCon(connstr);
                 conn.Open();
 
-                SQLiteCommand cmd = new SQLiteCommand(conn);
+                SqlCmd cmd = new SqlCmd(conn);
 
                 string query = String.Empty;
 
