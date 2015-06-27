@@ -43,12 +43,13 @@ namespace FavoImgs
 
         private string ShowFolderBrowserDialog()
         {
+#if !MONO
             FolderBrowserDialog b = new FolderBrowserDialog();
             b.Description = Strings.SelectFolderToSave;
 
             if (b.ShowDialog() == DialogResult.OK)
                 return b.SelectedPath;
-
+#endif
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "FavoImgs");
         }
 

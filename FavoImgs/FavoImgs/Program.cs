@@ -29,10 +29,11 @@ namespace FavoImgs
                 throw;
             }
         }
-
-
+			
+#if !MONO
         [STAThread]
-        static int Main(string[] args)
+#endif
+		static int Main(string[] args)
         {
             TwitterClient tc = new TwitterClient();
 
