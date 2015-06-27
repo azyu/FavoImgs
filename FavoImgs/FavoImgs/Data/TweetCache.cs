@@ -32,24 +32,25 @@ namespace FavoImgs.Data
                     SqlCon.CreateFile(cachePath);
 
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SqlCon conn = new SqlCon(connstr);
-                conn.Open();
+                using (var conn = new SqlCon(connstr))
+                {
+                    conn.Open();
 
-                SqlCmd cmd = new SqlCmd(conn);
+                    using (var cmd = new SqlCmd(conn))
+                    {
+                        string query = String.Empty;
 
-                string query = String.Empty;
+                        query =
+                            "CREATE TABLE MediaUris (" +
+                            "Id bigint NOT NULL," +
+                            "Uri nvarchar(256) NOT NULL," +
+                            "State int NOT NULL," +
+                            "PRIMARY KEY (Id, Uri));";
 
-                query =
-                    "CREATE TABLE MediaUris (" +
-                    "Id bigint NOT NULL," +
-                    "Uri nvarchar(256) NOT NULL," +
-                    "State int NOT NULL," +
-                    "PRIMARY KEY (Id, Uri));";
-
-                cmd.CommandText = query;
-                cmd.ExecuteNonQuery();
-
-                conn.Close();
+                        cmd.CommandText = query;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
             }
             catch
             {
@@ -62,18 +63,24 @@ namespace FavoImgs.Data
             try
             {
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SqlCon conn = new SqlCon(connstr);
-                conn.Open();
+                int count = 0;
 
-                SqlCmd cmd = new SqlCmd(conn);
+                using (var conn = new SqlCon(connstr))
+                {
+                    conn.Open();
 
-                string query = String.Empty;
+                    using (var cmd = new SqlCmd(conn))
+                    {
+                        string query = String.Empty;
 
-                query = @"SELECT count(*) FROM [MediaUris] WHERE [Id] = @Id";
-                cmd.CommandText = query;
-                cmd.Parameters.AddWithValue("@Id", Id);
+                        query = @"SELECT count(*) FROM [MediaUris] WHERE [Id] = @Id";
+                        cmd.CommandText = query;
+                        cmd.Parameters.AddWithValue("@Id", Id);
 
-                int count = Convert.ToInt32(cmd.ExecuteScalar());
+                        count = Convert.ToInt32(cmd.ExecuteScalar());
+                    }
+                }
+
                 return (count != 0);
             }
             catch
@@ -87,17 +94,23 @@ namespace FavoImgs.Data
             try
             {
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SqlCon conn = new SqlCon(connstr);
-                conn.Open();
+                Int64 Id = 0;
 
-                SqlCmd cmd = new SqlCmd(conn);
+                using (var conn = new SqlCon(connstr))
+                {
+                    conn.Open();
 
-                string query = String.Empty;
+                    using (var cmd = new SqlCmd(conn))
+                    {
+                        string query = String.Empty;
 
-                query = @"SELECT Id FROM [MediaUris] order by Id DESC limit 1";
-                cmd.CommandText = query;
+                        query = @"SELECT Id FROM [MediaUris] order by Id DESC limit 1";
+                        cmd.CommandText = query;
 
-                Int64 Id = Convert.ToInt64(cmd.ExecuteScalar());
+                        Id = Convert.ToInt64(cmd.ExecuteScalar());
+                    }
+                }
+
                 return Id;
             }
             catch
@@ -111,16 +124,21 @@ namespace FavoImgs.Data
             try
             {
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SqlCon conn = new SqlCon(connstr);
-                conn.Open();
+                int rowcount = 0;
 
-                SqlCmd cmd = new SqlCmd(conn);
+                using (var conn = new SqlCon(connstr))
+                {
+                    conn.Open();
 
-                string query = String.Empty;
+                    using (var cmd = new SqlCmd(conn))
+                    {
+                        string query = String.Empty;
 
-                query = @"UPDATE [MediaUris] SET [State] = 0";
-                cmd.CommandText = query;
-                int rowcount = cmd.ExecuteNonQuery();
+                        query = @"UPDATE [MediaUris] SET [State] = 0";
+                        cmd.CommandText = query;
+                        rowcount = cmd.ExecuteNonQuery();
+                    }
+                }
 
                 return (rowcount != 0);
             }
@@ -135,19 +153,25 @@ namespace FavoImgs.Data
             try
             {
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SqlCon conn = new SqlCon(connstr);
-                conn.Open();
+                int state = 0;
 
-                SqlCmd cmd = new SqlCmd(conn);
+                using(var conn = new SqlCon(connstr))
+                {
+                    conn.Open();
 
-                string query = String.Empty;
+                    using(var cmd = new SqlCmd(conn))
+                    {
+                        string query = String.Empty;
 
-                query = @"SELECT [State] FROM [MediaUris] WHERE [Id] = @Id and [Uri] = @Uri";
-                cmd.CommandText = query;
-                cmd.Parameters.AddWithValue("@Id", Id);
-                cmd.Parameters.AddWithValue("@Uri", uri);
+                        query = @"SELECT [State] FROM [MediaUris] WHERE [Id] = @Id and [Uri] = @Uri";
+                        cmd.CommandText = query;
+                        cmd.Parameters.AddWithValue("@Id", Id);
+                        cmd.Parameters.AddWithValue("@Uri", uri);
 
-                int state = Convert.ToInt32(cmd.ExecuteScalar());
+                        state = Convert.ToInt32(cmd.ExecuteScalar());
+                    }
+                }
+
                 return (state != 0);
             }
             catch
@@ -161,17 +185,23 @@ namespace FavoImgs.Data
             try
             {
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SqlCon conn = new SqlCon(connstr);
-                conn.Open();
+                Int64 Id = 0;
 
-                SqlCmd cmd = new SqlCmd(conn);
+                using (var conn = new SqlCon(connstr))
+                {
+                    conn.Open();
 
-                string query = String.Empty;
+                    using(var cmd = new SqlCmd(conn))
+                    {
+                        string query = String.Empty;
 
-                query = @"SELECT Id FROM [MediaUris] order by Id ASC limit 1";
-                cmd.CommandText = query;
+                        query = @"SELECT Id FROM [MediaUris] order by Id ASC limit 1";
+                        cmd.CommandText = query;
 
-                Int64 Id = Convert.ToInt64(cmd.ExecuteScalar());
+                        Id = Convert.ToInt64(cmd.ExecuteScalar());
+                    }
+                }
+
                 return Id;
             }
             catch
@@ -185,25 +215,27 @@ namespace FavoImgs.Data
             try
             {
                 string connstr = String.Format("Data Source={0};Version=3", cachePath);
-                SqlCon conn = new SqlCon(connstr);
-                conn.Open();
 
-                SqlCmd cmd = new SqlCmd(conn);
+                using(var conn = new SqlCon(connstr))
+                {
+                    conn.Open();
 
-                string query = String.Empty;
+                    using(var cmd = new SqlCmd(conn))
+                    {
+                        string query = String.Empty;
 
-                query = @"INSERT INTO [MediaUris] ([Id], [Uri], [State])
-                VALUES (@Id, @Uri, 1)";
-                cmd.CommandText = query;
-                cmd.Parameters.AddWithValue("@Id", Id);
-                cmd.Parameters.AddWithValue("@Uri", uri);
+                        query = @"INSERT INTO [MediaUris] ([Id], [Uri], [State]) VALUES (@Id, @Uri, 1)";
+                        cmd.CommandText = query;
+                        cmd.Parameters.AddWithValue("@Id", Id);
+                        cmd.Parameters.AddWithValue("@Uri", uri);
 
-                cmd.ExecuteNonQuery();
-                conn.Close();
+                        cmd.ExecuteNonQuery();
+                    }
+                }
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine(ex.Message);
+                throw;
             }
         }
     }
