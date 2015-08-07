@@ -462,7 +462,12 @@ namespace FavoImgs
             if (!String.IsNullOrEmpty(options.Source))
             {
                 var source = options.Source.ToLower();
-                if (source == "list")
+                if (source == "favorites")
+                {
+                    options.TweetSource = TweetSource.Favorites;
+                    Console.WriteLine(" [Option] Source: Favorites");
+                }
+                else if (source == "list")
                 {
                     options.TweetSource = TweetSource.Lists;
 
@@ -539,8 +544,8 @@ namespace FavoImgs
                 */
                 else
                 {
-                    options.TweetSource = TweetSource.Tweets;
-                    Console.WriteLine(" [Option] Source: Favorites");
+                    string msg = String.Format(" - Error: {0}", Strings.InvalidSource);
+                    return false;
                 }
             }
 

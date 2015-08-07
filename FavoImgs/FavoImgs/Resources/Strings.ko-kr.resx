@@ -162,4 +162,7 @@
   <data name="HashtagNotBeginsWithSharp" xml:space="preserve">
     <value>첫 번째 문자가 #이 아닙니다.</value>
   </data>
+  <data name="InvalidSource" xml:space="preserve">
+    <value>올바르지 않은 Source입니다.</value>
+  </data>
 </root>

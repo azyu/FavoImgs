@@ -162,4 +162,7 @@
   <data name="HashtagNotBeginsWithSharp" xml:space="preserve">
     <value>Not begins with sharp!</value>
   </data>
+  <data name="InvalidSource" xml:space="preserve">
+    <value>Invalid source!</value>
+  </data>
 </root>
