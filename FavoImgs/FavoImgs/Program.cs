@@ -1,5 +1,6 @@
 ﻿using FavoImgs.Data;
 using System;
+using System.Net;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("UnitTest")]
@@ -34,6 +35,7 @@ namespace FavoImgs
         [STAThread]
         static int Main(string[] args)
         {
+            ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072; // Tls12
             TwitterClient tc = new TwitterClient();
 
             try
