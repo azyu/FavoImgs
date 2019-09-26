@@ -37,8 +37,8 @@ namespace FavoImgs
 
         private string ShowTweet(CoreTweet.Status tweet)
         {
-            return String.Format("{0} (@{1})  -- {2}\n{3}",
-                tweet.User.Name, tweet.User.ScreenName, tweet.CreatedAt.LocalDateTime, tweet.Text);
+            return String.Format("{0} (@{1})  -- {2} {3}\n{4}",
+                tweet.User.Name, tweet.User.ScreenName, tweet.CreatedAt.LocalDateTime, tweet.Id, tweet.Text);
         }
 
         private string ShowFolderBrowserDialog()

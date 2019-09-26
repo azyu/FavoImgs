@@ -22,7 +22,7 @@ namespace FavoImgs
                     {
                         foreach (var eachVideoVariant in eachMedia.VideoInfo.Variants)
                         {
-                            Uri uri = eachVideoVariant.Url;
+                            Uri uri = new Uri(eachVideoVariant.Url);
                             downloadItems.Add(new DownloadItem(twt.Id, twt.User.ScreenName, uri, uri.Segments.Last()));
                         }
                     }
@@ -33,7 +33,7 @@ namespace FavoImgs
             {
                 foreach (var url in twt.Entities.Media)
                 {
-                    Uri uri = url.MediaUrl;
+                    Uri uri = new Uri(url.MediaUrl);
 
                     IMediaProvider mediaProvider = null;
 
@@ -109,7 +109,7 @@ namespace FavoImgs
             {
                 foreach (var media in twt.ExtendedEntities.Media)
                 {
-                    Uri uri = media.MediaUrl;
+                    Uri uri = new Uri(media.MediaUrl);
 
                     if (!IsImageFile(uri.ToString()))
                         continue;
